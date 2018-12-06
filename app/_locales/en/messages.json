@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "LitNav",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Lightning Navigator",
+    "description": "The description of the application"
+  }
+}
