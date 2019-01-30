@@ -1,10 +1,10 @@
 {
     "name": "Lightning Navigator",
-    "version": "0.0.1",
-    "manifest_version": 1,
+    "version": "0.0.2",
+    "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
-        "default_icon": "images/38-white.png"
+        "default_icon": "images/ncino_38.png"
     },
     "background": {
         "scripts": [
@@ -13,11 +13,11 @@
         "persistent": true
     },
     "icons": {
-        "128": "images/128-white.png"
+        "128": "images/128.png"
     },
     "web_accessible_resources": [
         "images/ajax-loader.gif",
-        "images/128.png"
+        "images/ncino_128.png"
     ],
     "description": "",
     "content_scripts": [
