@@ -131,7 +131,7 @@ var sfnav = (function() {
       {
 
         clearOutput();
-        addWord('Usage: login as <FirstName> <LastName> OR <Username>');
+        outp.appendChild(addWord('Usage: login as <FirstName> <LastName> OR <Username>'));
         setVisible('visible');
 
       }
@@ -139,7 +139,7 @@ var sfnav = (function() {
       {
 
         clearOutput();
-        addWord('Usage: cf <Object API Name> <Field Name> <Data Type>');
+        outp.appendChild(addWord('Usage: cf <Object API Name> <Field Name> <Data Type>'));
         setVisible('visible');
 
       }
@@ -230,7 +230,11 @@ var sfnav = (function() {
           }
         if (words2.length > 0){
           clearOutput();
-          for (var i=0;i<words2.length; ++i) addWord (words2[i]);
+          var parts = document.createDocumentFragment();
+          for (var i=0;i<words2.length; ++i) {
+            parts.appendChild(addWord (words2[i]));
+          };
+          outp.appendChild(parts);
           setVisible("visible");
           input = document.getElementById("sfnav_quickSearch").value;
         }
@@ -256,7 +260,11 @@ var sfnav = (function() {
 
         if (words.length > 0){
           clearOutput();
-          for (var i=0;i<words.length; ++i) addWord (words[i]);
+          var parts = document.createDocumentFragment();
+          for (var i=0;i<words.length; ++i) {
+            parts.appendChild(addWord (words[i]));
+          };
+          outp.appendChild(parts);
           setVisible("visible");
           input = document.getElementById("sfnav_quickSearch").value;
         }
@@ -336,7 +344,7 @@ var sfnav = (function() {
     if(sp.id && sp.length > 0){
       sp.onclick = mouseClickLoginAs;
     }
-    outp.appendChild(sp);
+    return sp;
   }
 
   function addSuccess(text)
@@ -380,14 +388,14 @@ var sfnav = (function() {
     setVisible("visible");
   }
 
+  // faster clearing of output now
   function clearOutput(){
     if(typeof outp != 'undefined')
+      var len = outp.childNodes.length;
+      while (len--)
       {
-        while (outp.hasChildNodes()){
-          noten=outp.firstChild;
-          outp.removeChild(noten);
-        }
-      }
+        outp.removeChild(outp.lastChild);
+      };
   }
   function getWord(beginning, dict){
     var words = [];
@@ -726,11 +734,13 @@ var sfnav = (function() {
   }
 
   function loginAsShowOptions(records){
+    var parts = document.createDocumentFragment();
     for(var i = 0; i < records.length; ++i){
       var cmd = 'Login As ' + records[i].Name;
       cmds[cmd] = {key: cmd, id: records[i].Id};
-      addWord(cmd);
+      parts.appendChild(addWord(cmd));
     }
+    outp.appendChild(parts);
     setVisible('visible');
   }
 
@@ -812,7 +822,10 @@ var sfnav = (function() {
   function getAllObjectMetadata() {
 
     // session ID is different and useless in VF
-    if(location.origin.indexOf("visual.force") !== -1) return;
+    if(location.origin.indexOf("visual.force") !== -1) {
+      addError('Refresh failed: Inside VisualForce, try from Setup');
+      return;
+    }
 
     sid = "Bearer " + getCookie('sid');
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
@@ -831,7 +844,12 @@ var sfnav = (function() {
     getSetupTree();
     // getCustomObjects();
     getCustomObjectsDef();
-
+    getApexClassesDef();
+    getTriggersDef();
+    getProfilesDef();
+    getPagesDef();
+    getUsersDef();
+    getComponentsDef();
   }
 
   function parseSetupTree(html)
@@ -1069,14 +1087,19 @@ var sfnav = (function() {
 
     Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'));
 
-
-    Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) {
+    Mousetrap.wrap(searchBar).bind('backspace', function(e) {
       posi = -1;
       oldins=-1;
     });
 
-    document.getElementById('sfnav_quickSearch').oninput = function(e) {
-      lookAt();
+    var timeout = null;
+
+    searchBar.oninput = function(e) {
+      clearTimeout(timeout);
+
+      timeout = setTimeout(function () {
+        lookAt();  
+      }, 150);
       return true;
     }
 
@@ -1107,7 +1130,102 @@ var sfnav = (function() {
       {
         getCustomObjects();
       });
-
+  }
+  function getApexClassesDef() {
+    ftClient.query('Select+Id,+Name,+NamespacePrefix+FROM+ApexClass',
+    function(success)
+    {
+      for(var i=0;i<success.records.length;i++)
+        {
+          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].Name + '__c';
+          cmds['Setup > Apex Class > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying apex classes');
+      console.log('error =>> ', error);
+    });    
+  }
+  function getTriggersDef() {
+    ftClient.query('Select+Id,+Name+FROM+ApexTrigger',
+    function(success)
+    {
+      for(var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Apex Trigger > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying apex triggers');
+      console.log('error =>> ', error);
+    });
+  }
+  function getProfilesDef() {
+    ftClient.query('Select+Id,+Name+FROM+Profile',
+    function(success)
+    {
+      for(var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Profile > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying profiles');
+      console.log('error =>> ', error);
+    });   
+  }
+  function getPagesDef() {
+    ftClient.query('Select+Id,+Name+FROM+ApexPage',
+    function(success)
+    {
+      for(var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Visualforce page > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying visualforce pages');
+      console.log('error =>> ', error);
+    });
+  }
+  function getComponentsDef() {
+    ftClient.query('Select+Id,+Name+FROM+ApexComponent',
+    function(success)
+    {
+      for(var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Visualforce component > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying visualforce components');
+      console.log('error =>> ', error);
+    });
+  }
+  function getUsersDef() {
+    ftClient.query('Select+Id,+Name+FROM+User',
+    function(success)
+    {
+      for(var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > User > ' + apiName] = {url: '/' + success.records[i].Id + '?noredirect=1', key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying users');
+      console.log('error =>> ', error);
+    });
   }
   function init()
   {
