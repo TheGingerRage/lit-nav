@@ -538,9 +538,6 @@ var sfnav = (function() {
             rightDecimals = 0;
           }
 
-
-
-
         ftClient.queryByName('CustomField', fieldName, sObjectName, function(success) {
           addSuccess(success);
           fieldMeta = new  forceTooling.CustomFields.CustomField(arrSplit[1], arrSplit[2], dataType, null, arrSplit[4], parseInt(leftDecimals),parseInt(rightDecimals),null);
@@ -850,6 +847,8 @@ var sfnav = (function() {
     getPagesDef();
     getUsersDef();
     getComponentsDef();
+    getSysPropsNFORCEDef();
+    getSysPropsLLCBIDef();
   }
 
   function parseSetupTree(html)
@@ -1227,6 +1226,71 @@ var sfnav = (function() {
       console.log('error =>> ', error);
     });
   }
+  function getSysPropsNFORCEDef() {
+    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
+      + '/query?q=Select+Id,+Name,+nFORCE__Category_Name__c,+nFORCE__Key__c+FROM+nFORCE__System_Properties__c';
+    var req = new XMLHttpRequest();
+    req.open("GET", theurl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseSysPropsNFORCE(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseSysPropsNFORCE(_data) {
+    if(_data.length == 0) return;
+    var properties = JSON.parse(_data);
+
+    var action = {};
+    properties.records.map( obj => {
+
+      if(obj.attributes != null) {
+        propRecord = obj.nFORCE__Category_Name__c, obj.nFORCE__Key__c, obj.Name, obj.Id;
+
+        action = {
+          key: obj.name,
+          keyPrefix: obj.Id,
+          url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+        }
+        cmds['Setup > System Property (nFORCE) > ' + obj.nFORCE__Category_Name__c + ' > ' + obj.nFORCE__Key__c] = action;
+      }
+    });
+    store('Store Commands', cmds);
+  }
+  function getSysPropsLLCBIDef() {
+    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
+      + '/query?q=Select+Id,+Name,+LLC_BI__Category_Name__c,+LLC_BI__Key__c+FROM+LLC_BI__System_Properties__c';
+    var req = new XMLHttpRequest();
+    req.open("GET", theurl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseSysPropsLLCBI(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseSysPropsLLCBI(_data) {
+    if(_data.length == 0) return;
+    var properties = JSON.parse(_data);
+
+    var action = {};
+    properties.records.map( obj => {
+
+      if(obj.attributes != null) {
+        propRecord = obj.LLC_BI__Category_Name__c, obj.LLC_BI__Key__c, obj.Name, obj.Id;
+
+        action = {
+          key: obj.name,
+          keyPrefix: obj.Id,
+          url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+        }
+        cmds['Setup > System Property (LLC_BI) > ' + obj.LLC_BI__Category_Name__c + ' > ' + obj.LLC_BI__Key__c] = action;
+      }
+    });
+    store('Store Commands', cmds);
+  }
+
+
+
   function init()
   {
     ftClient = new forceTooling.Client();
