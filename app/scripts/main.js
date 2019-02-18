@@ -489,6 +489,11 @@ var sfnav = (function() {
           clearOutput();
           return;
         }
+        if (location.origin.indexOf('lightning.force.com') !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: In Lightning Experience, try from Classic';
+          clearOutput();
+          return;
+        }
         showLoadingIndicator();
         getAllObjectMetadata();
         setTimeout(function() {
