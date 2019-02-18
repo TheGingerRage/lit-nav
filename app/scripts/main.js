@@ -783,6 +783,7 @@ var sfnav = (function() {
   }
 
   function getLimits() {
+    sid = "Bearer " + getCookie('sid');
     var limitsUrl = getServerInstance() + '/services/data/v45.0/limits';
     var req = new XMLHttpRequest();
     req.open("GET", limitsUrl, true);
