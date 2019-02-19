@@ -873,6 +873,7 @@ var sfnav = (function() {
 
     cmds['Refresh Metadata'] = {};
     cmds['Setup'] = {};
+    cmds['OrgLimits'] = {};
     var req = new XMLHttpRequest();
     req.open("GET", theurl, true);
     req.setRequestHeader("Authorization", sid);
