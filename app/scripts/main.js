@@ -1,4 +1,4 @@
-// @copyright 2012-2016 Daniel Nakov / Silverline CRM
+// @copyright 2012+ Daniel Nakov / Silverline CRM
 // http://silverlinecrm.com
 // @copyright 2018+ Bryan Mitchell / nCino
 // http://ncino.com
@@ -88,33 +88,36 @@ var sfnav = (function() {
   }) (Mousetrap);
 
   var mouseHandler=
-    function(){
+    function() {
       this.classList.add('sfnav_selected');
       mouseClickLoginAsUserId = this.getAttribute("id");
       return true;
     }
 
   var mouseHandlerOut=
-    function(){
+    function() {
       this.classList.remove('sfnav_selected');
       return true;
     }
 
   var mouseClick=
-    function(){
-      document.getElementById("sfnav_quickSearch").value = this.firstChild.nodeValue;
+    function() {
+      let searchBar = document.getElementById("sfnav_quickSearch");
+      searchBar.value = this.firstChild.nodeValue;
       setVisible("hidden");
       posi = -1;
       oldins = this.firstChild.nodeValue;
       setVisibleSearch("hidden");
       setVisible("hidden");
       invokeCommand(this.firstChild.nodeValue,false,'click');
+      clearOutput();
+      searchBar.value = '';
       return true;
     }
 
   var mouseClickLoginAsUserId;
   var mouseClickLoginAs=
-    function(){
+    function() {
       loginAsPerform(mouseClickLoginAsUserId);
       return true;
     }
@@ -127,30 +130,30 @@ var sfnav = (function() {
   }
   function addElements(ins)
   {
-    if(ins.substring(0,9) == 'login as ')
+    if (ins.substring(0,9) == 'login as ')
       {
 
         clearOutput();
-        addWord('Usage: login as <FirstName> <LastName> OR <Username>');
+        outp.appendChild(addWord('Usage: login as <FirstName> <LastName> OR <Username>'));
         setVisible('visible');
 
       }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4)
+    else if (ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4)
       {
 
         clearOutput();
-        addWord('Usage: cf <Object API Name> <Field Name> <Data Type>');
+        outp.appendChild(addWord('Usage: cf <Object API Name> <Field Name> <Data Type>'));
         setVisible('visible');
 
       }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length == 4)
+    else if (ins.substring(0,3) == 'cf ' && ins.split(' ').length == 4)
       {
         clearOutput();
         var wordArray = ins.split(' ');
 
         words = getWord(wordArray[3], META_DATATYPES);
         var words2 = [];
-        for(var i = 0; i<words.length; i++)
+        for (var i = 0; i<words.length; i++)
           {
             switch(words[i].toUpperCase())
             {
@@ -228,25 +231,29 @@ var sfnav = (function() {
 
 
           }
-        if (words2.length > 0){
+        if (words2.length > 0) {
           clearOutput();
-          for (var i=0;i<words2.length; ++i) addWord (words2[i]);
+          var docFragment = document.createDocumentFragment();
+          for (var i=0;i<words2.length; ++i) {
+            docFragment.appendChild(addWord (words2[i]));
+          };
+          outp.appendChild(docFragment);
           setVisible("visible");
           input = document.getElementById("sfnav_quickSearch").value;
         }
-        else{
+        else {
           setVisible("hidden");
           posi = -1;
         }
         /*
-           for(var i=0;i<Object.keys(META_DATATYPES).length;i++)
+           for (var i=0;i<Object.keys(META_DATATYPES).length;i++)
            {
            addWord(Object.keys(META_DATATYPES)[i]);
            }
          */
         setVisible('visible');
       }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length > 4)
+    else if (ins.substring(0,3) == 'cf ' && ins.split(' ').length > 4)
       {
         clearOutput();
       }
@@ -254,9 +261,13 @@ var sfnav = (function() {
       {
         words = getWord(ins, cmds);
 
-        if (words.length > 0){
+        if (words.length > 0) {
           clearOutput();
-          for (var i=0;i<words.length; ++i) addWord (words[i]);
+          var docFragment = document.createDocumentFragment();
+          for (var i=0;i<words.length; ++i) {
+            docFragment.appendChild(addWord (words[i]));
+          };
+          outp.appendChild(docFragment);
           setVisible("visible");
           input = document.getElementById("sfnav_quickSearch").value;
         }
@@ -268,7 +279,7 @@ var sfnav = (function() {
       }
     var firstEl = document.querySelector('#sfnav_output :first-child');
 
-    if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+    if (posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
   function httpGet(url, callback)
@@ -281,13 +292,13 @@ var sfnav = (function() {
     }
     req.send();
   }
-  function getVisible(){
+  function getVisible() {
     return document.getElementById("sfnav_shadow").style.visibility;
   }
   function isVisible() {
     return document.getElementById("sfnav_shadow").style.visibility !== 'hidden';
   }
-  function setVisible(visi){
+  function setVisible(visi) {
     var x = document.getElementById("sfnav_shadow");
     x.style.position = 'relative';
     x.style.visibility = visi;
@@ -299,10 +310,10 @@ var sfnav = (function() {
   {
     var t = document.getElementById("sfnav_search_box");
     t.style.visibility = visi;
-    if(visi=='visible') document.getElementById("sfnav_quickSearch").focus();
+    if (visi=='visible') document.getElementById("sfnav_quickSearch").focus();
   }
 
-  function lookAt(){
+  function lookAt() {
     let newSearchVal = document.getElementById('sfnav_quickSearch').value
     if (newSearchVal !== '') {
       addElements(newSearchVal);
@@ -313,10 +324,10 @@ var sfnav = (function() {
       posi = -1;
     }
   }
-  function addWord(word){
+  function addWord(word) {
     var d = document.createElement("div");
     var sp;
-    if(cmds[word] != null && cmds[word].url != null && cmds[word].url != "") {
+    if (cmds[word] != null && cmds[word].url != null && cmds[word].url != "") {
       sp = document.createElement("a");
       sp.setAttribute("href", cmds[word].url);
 
@@ -324,7 +335,7 @@ var sfnav = (function() {
       sp = d;
     }
 
-    if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
+    if (cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
       sp.id = cmds[word].id;
     }
 
@@ -333,10 +344,10 @@ var sfnav = (function() {
     sp.onmouseover = mouseHandler;
     sp.onmouseout = mouseHandlerOut;
     sp.onclick = mouseClick;
-    if(sp.id && sp.length > 0){
+    if (sp.id && sp.length > 0) {
       sp.onclick = mouseClickLoginAs;
     }
-    outp.appendChild(sp);
+    return sp;
   }
 
   function addSuccess(text)
@@ -362,7 +373,7 @@ var sfnav = (function() {
     var errorText = '';
     err.appendChild(document.createTextNode('Error! '));
     err.appendChild(document.createElement('br'));
-    for(var i = 0;i<text.length;i++)
+    for (var i = 0;i<text.length;i++)
       {
         err.appendChild(document.createTextNode(text[i].message));
         err.appendChild(document.createElement('br'));
@@ -380,22 +391,22 @@ var sfnav = (function() {
     setVisible("visible");
   }
 
-  function clearOutput(){
-    if(typeof outp != 'undefined')
+  // faster clearing of output now
+  function clearOutput() {
+    if (typeof outp != 'undefined')
+      var len = outp.childNodes.length;
+      while (len--)
       {
-        while (outp.hasChildNodes()){
-          noten=outp.firstChild;
-          outp.removeChild(noten);
-        }
-      }
+        outp.removeChild(outp.lastChild);
+      };
   }
-  function getWord(beginning, dict){
+  function getWord(beginning, dict) {
     var words = [];
-    if(typeof beginning === 'undefined') return [];
+    if (typeof beginning === 'undefined') return [];
 
     var tmpSplit = beginning.split(' ');
     var match = false;
-    if(beginning.length == 0)
+    if (beginning.length == 0)
       {
         for (var key in dict)
           words.push(key);
@@ -405,16 +416,16 @@ var sfnav = (function() {
     for (var key in dict)
       {
         match = false;
-        if(key.toLowerCase().indexOf(beginning) != -1)
+        if (key.toLowerCase().indexOf(beginning) != -1)
           {
             arrFound.push({num : 10,key : key});
           }
         else
           {
-            for(var i = 0;i<tmpSplit.length;i++)
+            for (var i = 0;i<tmpSplit.length;i++)
               {
 
-                if(key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
+                if (key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
                   {
                     match = true;
                     sortValue = 1;
@@ -422,10 +433,10 @@ var sfnav = (function() {
                 else
                   {
                     match = false;
-                    if(dict[key]['synonyms'] !== undefined){
-                      for(var j = 0;j<dict[key]['synonyms'].length;j++){
+                    if (dict[key]['synonyms'] !== undefined) {
+                      for (var j = 0;j<dict[key]['synonyms'].length;j++) {
                         keySynonym = dict[key]['synonyms'][j];
-                        if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
+                        if (keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
                           {
                             match = true;
                             sortValue = 0.5;
@@ -439,26 +450,28 @@ var sfnav = (function() {
                     break;
                   }
               }
-            if(match) arrFound.push({num : sortValue, key : key});
+            if (match) {
+              arrFound.push({num : sortValue, key : key});
+            }
           }
       }
     arrFound.sort(function(a,b) {
       return b.num - a.num;
     });
-    for(var i = 0;i<arrFound.length;i++)
+    for (var i = 0;i<arrFound.length;i++)
       words[words.length] = arrFound[i].key;
 
     return words;
   }
-  function setColor (_posi, _color, _forg){
+  function setColor (_posi, _color, _forg) {
     outp.childNodes[_posi].style.background = _color;
     outp.childNodes[_posi].style.color = _forg;
   }
 
   function invokeCommand(cmd, newtab, event) {
-    if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
+    if (event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
       {
-        if(newtab)
+        if (newtab)
           {
             var w = window.open(cmds[cmd].url, '_newtab');
             w.blur();
@@ -469,8 +482,18 @@ var sfnav = (function() {
 
         return true;
       }
-    if(cmd.toLowerCase() == 'refresh metadata')
+    if (cmd.toLowerCase() == 'refresh metadata')
       {
+        if (location.origin.indexOf("visual.force") !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: Inside VisualForce, try from Setup';
+          clearOutput();
+          return;
+        }
+        if (location.origin.indexOf('lightning.force.com') !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: In Lightning Experience, try from Classic';
+          clearOutput();
+          return;
+        }
         showLoadingIndicator();
         getAllObjectMetadata();
         setTimeout(function() {
@@ -478,19 +501,24 @@ var sfnav = (function() {
         }, 30000)
         return true;
       }
-    if(cmd.toLowerCase() == 'setup')
+    if (cmd.toLowerCase() == 'setup')
       {
         window.location.href = serverInstance + '/ui/setup/Setup';
         return true;
       }
-    if(cmd.toLowerCase().substring(0,3) == 'cf ')
+    if (cmd.toLowerCase().substring(0,3) == 'cf ')
       {
         createField(cmd);
         return true;
       }
-    if(cmd.toLowerCase().substring(0,9) == 'login as ')
+    if (cmd.toLowerCase().substring(0,9) == 'login as ')
       {
         loginAs(cmd);
+        return true;
+      }
+    if (cmd.toLowerCase().substring(0,9) == 'orglimits')
+      {
+        getLimits();
         return true;
       }
 
@@ -503,11 +531,11 @@ var sfnav = (function() {
     var dataType = '';
     var fieldMetadata;
 
-    if(arrSplit.length >= 3)
+    if (arrSplit.length >= 3)
       {
-        for(var key in META_DATATYPES)
+        for (var key in META_DATATYPES)
           {
-            if(META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
+            if (META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
               {
                 dataType = META_DATATYPES[key].name;
                 break;
@@ -519,7 +547,7 @@ var sfnav = (function() {
         var helpText = null;
         var typeLength = arrSplit[4];
         var rightDecimals, leftDecimals;
-        if(parseInt(arrSplit[5]) != NaN )
+        if (parseInt(arrSplit[5]) != NaN )
           {
             rightDecimals = parseInt(arrSplit[5]);
             leftDecimals = typeLength;
@@ -529,9 +557,6 @@ var sfnav = (function() {
             leftDecimals = 0;
             rightDecimals = 0;
           }
-
-
-
 
         ftClient.queryByName('CustomField', fieldName, sObjectName, function(success) {
           addSuccess(success);
@@ -562,13 +587,13 @@ var sfnav = (function() {
     var dataType = '';
     var fieldMetadata;
 
-    if(arrSplit.length >= 3)
+    if (arrSplit.length >= 3)
       {
         //  forceTooling.Client.create(whatever)
         /*
-           for(var key in META_DATATYPES)
+           for (var key in META_DATATYPES)
            {
-           if(META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
+           if (META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
            {
            dataType = META_DATATYPES[key].name;
            break;
@@ -578,7 +603,7 @@ var sfnav = (function() {
         dataType = META_DATATYPES[arrSplit[3].toUpperCase()].name;
         var sObjectName = arrSplit[1];
         var sObjectId = null;
-        if(typeof customObjects[sObjectName.toLowerCase()] !== 'undefined')
+        if (typeof customObjects[sObjectName.toLowerCase()] !== 'undefined')
           {
             sObjectId = customObjects[sObjectName.toLowerCase()].Id;
             sObjectName += '__c';
@@ -587,7 +612,7 @@ var sfnav = (function() {
         var helpText = null;
         var typeLength = arrSplit[4];
         var rightDecimals, leftDecimals;
-        if(parseInt(arrSplit[5]) != NaN )
+        if (parseInt(arrSplit[5]) != NaN )
           {
             rightDecimals = parseInt(arrSplit[5]);
             leftDecimals = parseInt(typeLength);
@@ -698,7 +723,7 @@ var sfnav = (function() {
   function loginAs(cmd) {
     var arrSplit = cmd.split(' ');
     var searchValue = arrSplit[2];
-    if(arrSplit[3] !== undefined)
+    if (arrSplit[3] !== undefined)
       searchValue += '+' + arrSplit[3];
 
     var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\'';
@@ -708,9 +733,9 @@ var sfnav = (function() {
       function(success) {
         console.log(success);
         var numberOfUserRecords = success.records.length;
-        if(numberOfUserRecords < 1){
+        if (numberOfUserRecords < 1) {
           addError([{"message":"No user for your search exists."}]);
-        } else if(numberOfUserRecords > 1){
+        } else if (numberOfUserRecords > 1) {
           loginAsShowOptions(success.records);
         } else {
           var userId = success.records[0].Id;
@@ -725,12 +750,14 @@ var sfnav = (function() {
     );
   }
 
-  function loginAsShowOptions(records){
-    for(var i = 0; i < records.length; ++i){
+  function loginAsShowOptions(records) {
+    var docFragment = document.createDocumentFragment();
+    for (var i = 0; i < records.length; ++i) {
       var cmd = 'Login As ' + records[i].Name;
       cmds[cmd] = {key: cmd, id: records[i].Id};
-      addWord(cmd);
+      docFragment.appendChild(addWord(cmd));
     }
+    outp.appendChild(docFragment);
     setVisible('visible');
   }
 
@@ -755,8 +782,39 @@ var sfnav = (function() {
     return loginLocation;
   }
 
+  function getLimits() {
+    sid = "Bearer " + getCookie('sid');
+    var limitsUrl = getServerInstance() + '/services/data/v45.0/limits';
+    var req = new XMLHttpRequest();
+    req.open("GET", limitsUrl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseLimits(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseLimits(_data) {
+    if (_data.length == 0) return;
+    var properties = JSON.parse(_data);
+    clearOutput();
+    Object.keys(properties).forEach(function (limit) {
+      addLimitInfo(limit, properties[limit].Remaining, properties[limit].Max);
+    });
+  }
+
+  function addLimitInfo(limit, remaining, max) {
+    var limitChild = document.createElement("div");
+    limitChild.className = 'sfnav_child';
+
+    limitChild.appendChild(document.createTextNode(limit + ': ' + remaining + ' Remaining of ' + max + ' Max'));
+    limitChild.appendChild(document.createElement('br'));
+    outp.appendChild(limitChild);
+
+    setVisible("visible");
+  }
+
   function getMetadata(_data) {
-    if(_data.length == 0) return;
+    if (_data.length == 0) return;
     var metadata = JSON.parse(_data);
 
     var mRecord = {};
@@ -764,7 +822,7 @@ var sfnav = (function() {
     metaData = {};
     metadata.sobjects.map( obj => {
 
-      if(obj.keyPrefix != null) {
+      if (obj.keyPrefix != null) {
         mRecord = {label, labelPlural, keyPrefix, urls} = obj;
         metaData[obj.keyPrefix] = mRecord;
 
@@ -810,15 +868,12 @@ var sfnav = (function() {
   }
 
   function getAllObjectMetadata() {
-
-    // session ID is different and useless in VF
-    if(location.origin.indexOf("visual.force") !== -1) return;
-
     sid = "Bearer " + getCookie('sid');
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
 
     cmds['Refresh Metadata'] = {};
     cmds['Setup'] = {};
+    cmds['OrgLimits'] = {};
     var req = new XMLHttpRequest();
     req.open("GET", theurl, true);
     req.setRequestHeader("Authorization", sid);
@@ -831,7 +886,15 @@ var sfnav = (function() {
     getSetupTree();
     // getCustomObjects();
     getCustomObjectsDef();
-
+    getApexClassesDef();
+    getTriggersDef();
+    getProfilesDef();
+    getPagesDef();
+    getUsersDef();
+    getComponentsDef();
+    getSysPropsNFORCEDef();
+    getSysPropsLLCBIDef();
+    getFlowsDef();
   }
 
   function parseSetupTree(html)
@@ -854,7 +917,7 @@ var sfnav = (function() {
         parentEl = item.parentElement.parentElement.parentElement;
         parent = parentEl.querySelector('.setupFolder').innerText;
       }
-      if(hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
+      if (hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
          && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
         hasTopParent = true;
         topParentEl = parentEl.parentElement.parentElement;
@@ -866,7 +929,7 @@ var sfnav = (function() {
 
       strName = strNameMain + item.innerText;
 
-      if(cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
+      if (cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
 
     });
     store('Store Commands', cmds);
@@ -930,22 +993,22 @@ var sfnav = (function() {
     var i;
     var returnUrl;
 
-    if(url.indexOf("salesforce") != -1)
+    if (url.indexOf("salesforce") != -1)
       {
         returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
         return returnUrl;
       }
-    if(url.indexOf("lightning.force") != -1)
+    if (url.indexOf("lightning.force") != -1)
       {
         returnUrl = url;
         return returnUrl;
       }
-    if(url.indexOf("cloudforce") != -1)
+    if (url.indexOf("cloudforce") != -1)
       {
         returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
         return returnUrl;
       }
-    if(url.indexOf("visual.force") != -1)
+    if (url.indexOf("visual.force") != -1)
       {
         returnUrl = 'https://' + urlParseArray[1] + '';
         return returnUrl;
@@ -965,7 +1028,7 @@ var sfnav = (function() {
     );
 
     // chrome.storage.local.get('settings', function(results) {
-    //     if(typeof results.settings.shortcut === 'undefined')
+    //     if (typeof results.settings.shortcut === 'undefined')
     //     {
     //         shortcut = 'shift+space';
     //         bindShortcut(shortcut);
@@ -980,22 +1043,22 @@ var sfnav = (function() {
   function kbdCommand(e, key) {
     var position = posi;
     var origText = '', newText = '';
-    if(position <0) position = 0;
+    if (position <0) position = 0;
 
     origText = document.getElementById("sfnav_quickSearch").value;
-    if(typeof outp.childNodes[position] != 'undefined')
+    if (typeof outp.childNodes[position] != 'undefined')
       {
         newText = outp.childNodes[position].firstChild.nodeValue;
 
       }
 
     var newtab = newTabKeys.indexOf(key) >= 0 ? true : false;
-    if(!newtab){
+    if (!newtab) {
       clearOutput();
       setVisible("hidden");
     }
 
-    if(!invokeCommand(newText, newtab))
+    if (!invokeCommand(newText, newtab))
       invokeCommand(origText, newtab);
   }
 
@@ -1005,7 +1068,7 @@ var sfnav = (function() {
 
     var firstChild;
 
-    if(outp.childNodes[posi] != null)
+    if (outp.childNodes[posi] != null)
       firstChild = outp.childNodes[posi].firstChild.nodeValue;
     else
       firstChild = null;
@@ -1014,9 +1077,9 @@ var sfnav = (function() {
     let isLastPos = direction == 'down' ? posi < words.length-1 : posi >= 0
 
     if (words.length > 0 && isLastPos) {
-      if(posi < 0) posi = 0;
+      if (posi < 0) posi = 0;
       posi = posi + (direction == 'down' ? 1 : -1);
-      if(outp.childNodes[posi] != null)
+      if (outp.childNodes[posi] != null)
         firstChild = outp.childNodes[posi].firstChild.nodeValue;
       else
         firstChild = null;
@@ -1026,7 +1089,7 @@ var sfnav = (function() {
         outp.childNodes[posi].scrollIntoViewIfNeeded();
         textfield.value = firstChild;
         return false
-        //if(textfield.value.indexOf('<') != -1 && textfield.value.indexOf('>') != -1) {
+        //if (textfield.value.indexOf('<') != -1 && textfield.value.indexOf('>') != -1) {
           //textfield.setSelectionRange(textfield.value.indexOf('<'), textfield.value.length);
           //textfield.focus();
          // return false;
@@ -1069,14 +1132,19 @@ var sfnav = (function() {
 
     Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'));
 
-
-    Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) {
+    Mousetrap.wrap(searchBar).bind('backspace', function(e) {
       posi = -1;
       oldins=-1;
     });
 
-    document.getElementById('sfnav_quickSearch').oninput = function(e) {
-      lookAt();
+    var timeout = null;
+
+    searchBar.oninput = function(e) {
+      clearTimeout(timeout);
+
+      timeout = setTimeout(function () {
+        lookAt();  
+      }, 150);
       return true;
     }
 
@@ -1093,10 +1161,10 @@ var sfnav = (function() {
   function getCustomObjectsDef()
   {
 
-    ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
+    ftClient.query('SELECT+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
       function(success)
       {
-        for(var i=0;i<success.records.length;i++)
+        for (var i=0;i<success.records.length;i++)
           {
             customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
             var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
@@ -1107,8 +1175,211 @@ var sfnav = (function() {
       {
         getCustomObjects();
       });
-
   }
+  function getApexClassesDef() {
+    ftClient.query('SELECT+Id,+Name,+NamespacePrefix+FROM+ApexClass',
+    function(success)
+    {
+      for (var i=0;i<success.records.length;i++)
+        {
+          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].Name + '__c';
+          cmds['Setup > Apex Class > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying apex classes');
+      console.log('error =>> ', error);
+    });    
+  }
+  function getTriggersDef() {
+    ftClient.query('SELECT+Id,+Name+FROM+ApexTrigger',
+    function(success)
+    {
+      for (var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Apex Trigger > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying apex triggers');
+      console.log('error =>> ', error);
+    });
+  }
+  function getProfilesDef() {
+    ftClient.query('SELECT+Id,+Name+FROM+Profile',
+    function(success)
+    {
+      for (var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Profile > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying profiles');
+      console.log('error =>> ', error);
+    });   
+  }
+  function getPagesDef() {
+    ftClient.query('SELECT+Id,+Name+FROM+ApexPage',
+    function(success)
+    {
+      for (var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Visualforce page > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying visualforce pages');
+      console.log('error =>> ', error);
+    });
+  }
+  function getComponentsDef() {
+    ftClient.query('SELECT+Id,+Name+FROM+ApexComponent',
+    function(success)
+    {
+      for (var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > Visualforce component > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying visualforce components');
+      console.log('error =>> ', error);
+    });
+  }
+  function getUsersDef() {
+    ftClient.query('SELECT+Id,+Name+FROM+User',
+    function(success)
+    {
+      for (var i=0;i<success.records.length;i++)
+        {
+          var apiName = success.records[i].Name;
+          cmds['Setup > User > ' + apiName] = {url: '/' + success.records[i].Id + '?noredirect=1', key: apiName};
+        }
+    },
+    function(error)
+    {
+      console.log('error while querying users');
+      console.log('error =>> ', error);
+    });
+  }
+  function getSysPropsNFORCEDef() {
+    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
+      + '/query?q=SELECT+Id,+Name,+nFORCE__Category_Name__c,+nFORCE__Key__c+FROM+nFORCE__System_Properties__c';
+    var req = new XMLHttpRequest();
+    req.open("GET", theurl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseSysPropsNFORCE(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseSysPropsNFORCE(_data) {
+    if (_data.length == 0) return;
+    var properties = JSON.parse(_data);
+    if (properties.nextRecordsUrl != undefined) {
+      var req = new XMLHttpRequest();
+      req.open("GET", properties.nextRecordsUrl, true);
+      req.setRequestHeader("Authorization", sid);
+      req.onload = function(response) {
+        parseSysPropsNFORCE(response.target.responseText);
+      }
+      req.send();
+    }
+    var action = {};
+    properties.records.map( obj => {
+
+      if (obj.attributes != null) {
+        propRecord = obj.nFORCE__Category_Name__c, obj.nFORCE__Key__c, obj.Name, obj.Id;
+
+        action = {
+          key: obj.name,
+          keyPrefix: obj.Id,
+          url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+        }
+        cmds['Setup > System Property (nFORCE) > ' + obj.nFORCE__Category_Name__c + ' > ' + obj.nFORCE__Key__c] = action;
+      }
+    });
+    store('Store Commands', cmds);
+  }
+  function getSysPropsLLCBIDef() {
+    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
+      + '/query?q=SELECT+Id,+Name,+LLC_BI__Category_Name__c,+LLC_BI__Key__c+FROM+LLC_BI__System_Properties__c';
+    var req = new XMLHttpRequest();
+    req.open("GET", theurl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseSysPropsLLCBI(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseSysPropsLLCBI(_data) {
+    if (_data.length == 0) return;
+    var properties = JSON.parse(_data);
+    if (properties.nextRecordsUrl != undefined) {
+      var req = new XMLHttpRequest();
+      req.open("GET", properties.nextRecordsUrl, true);
+      req.setRequestHeader("Authorization", sid);
+      req.onload = function(response) {
+        parseSysPropsLLCBI(response.target.responseText);
+      }
+      req.send();
+    }
+    var action = {};
+    properties.records.map( obj => {
+
+      if (obj.attributes != null) {
+        propRecord = obj.LLC_BI__Category_Name__c, obj.LLC_BI__Key__c, obj.Name, obj.Id;
+
+        action = {
+          key: obj.name,
+          keyPrefix: obj.Id,
+          url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+        }
+        cmds['Setup > System Property (LLC_BI) > ' + obj.LLC_BI__Category_Name__c + ' > ' + obj.LLC_BI__Key__c] = action;
+      }
+    });
+    store('Store Commands', cmds);
+  }
+  function getFlowsDef() {
+    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+DeveloperName+FROM+FlowDefinition';
+    var req = new XMLHttpRequest();
+    req.open("GET", toolingUrl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseFlows(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseFlows(_data) {
+    if (_data.length == 0) return;
+    var properties = JSON.parse(_data);
+    var action = {};
+    properties.records.map( obj => {
+
+      if (obj.attributes != null) {
+        propRecord = obj.DeveloperName, obj.Id;
+
+        action = {
+          key: obj.DeveloperName,
+          keyPrefix: obj.Id,
+          url: serverInstance + '/' + obj.Id
+        }
+        cmds['Setup > Flow > ' + obj.DeveloperName] = action;
+      }
+    });
+    store('Store Commands', cmds);
+  }
+
   function init()
   {
     ftClient = new forceTooling.Client();
@@ -1141,16 +1412,16 @@ var sfnav = (function() {
     //     console.log(results);
     // });
 
-
     chrome.runtime.sendMessage({
       action:'Get Commands', 'key': hash},
       function(response) {
         cmds = response;
-        if(cmds == null || cmds.length == 0) {
+        if (cmds == null || cmds.length == 0) {
           cmds = {};
           metaData = {};
           getAllObjectMetadata();
         } else {
+          // ???
         }
       });
 
@@ -1159,12 +1430,9 @@ var sfnav = (function() {
     //     metaData = response;
     // });
 
-
-
-
   }
 
-  if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
+  if (serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
   else init();
 
 })();
