@@ -24,7 +24,7 @@ This extension helps you get to any Salesforce page quickly. Just type in what y
 
 - Refresh Metadata won't glitch out on VF pages causing the extension to fill up with "undefined"
 
-- Refresh Metadata also elgeantly fails in Lightning now, rather than showing a loading indicator for a minute then doing nothing.
+- Refresh Metadata also elegantly fails in Lightning now, rather than showing a loading indicator for a minute then doing nothing.
 
 - Cleaned up some DOM interaction with appendChild/removeChild calls being mishandled
 
