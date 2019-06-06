@@ -1367,20 +1367,22 @@ var sfnav = (function() {
     if (_data.length == 0) return;
     var properties = JSON.parse(_data);
     var action = {};
-    properties.records.map( obj => {
+    if (properties.records) {
+      properties.records.map( obj => {
 
-      if (obj.attributes != null) {
-        propRecord = obj.DeveloperName, obj.Id;
+        if (obj.attributes != null) {
+          propRecord = obj.DeveloperName, obj.Id;
 
-        action = {
-          key: obj.DeveloperName,
-          keyPrefix: obj.Id,
-          url: serverInstance + '/' + obj.Id
+          action = {
+            key: obj.DeveloperName,
+            keyPrefix: obj.Id,
+            url: serverInstance + '/' + obj.Id
+          }
+          cmds['Setup > Flow > ' + obj.DeveloperName] = action;
         }
-        cmds['Setup > Flow > ' + obj.DeveloperName] = action;
-      }
-    });
-    store('Store Commands', cmds);
+      });
+      store('Store Commands', cmds);
+    }
   }
   function getCustomLabels() {
     var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value+FROM+ExternalString';
@@ -1396,21 +1398,23 @@ var sfnav = (function() {
     if (_data.length == 0) return;
     var properties = JSON.parse(_data);
     var action = {};
-    properties.records.map( obj => {
+    if (properties.records) {
+      properties.records.map( obj => {
 
-      if (obj.attributes != null) {
-        propRecord = obj.DeveloperName, obj.Id;
+        if (obj.attributes != null) {
+          propRecord = obj.DeveloperName, obj.Id;
 
-        action = {
-          key: obj.Name,
-          keyPrefix: obj.Id,
-          url: serverInstance + '/' + obj.Id
+          action = {
+            key: obj.Name,
+            keyPrefix: obj.Id,
+            url: serverInstance + '/' + obj.Id
+          }
+          cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Name] = action;
+          cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Value] = action;
         }
-        cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Name] = action;
-        cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Value] = action;
-      }
-    });
-    store('Store Commands', cmds);
+      });
+      store('Store Commands', cmds);
+    }
   }
 
   function init()
