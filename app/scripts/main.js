@@ -489,7 +489,7 @@ var sfnav = (function() {
           clearOutput();
           return;
         }
-        if (location.origin.indexOf('lightning.force.com') !== -1) {
+        if (location.origin.indexOf('lightning.force') !== -1) {
           document.getElementById('sfnav_quickSearch').value = 'Refresh failed: In Lightning Experience, try from Classic';
           clearOutput();
           return;
@@ -1284,7 +1284,9 @@ var sfnav = (function() {
     req.send();
   }
   function parseSysPropsNFORCE(_data) {
-    if (_data.length == 0) return;
+    if (_data.length == 0) {
+      return;
+    }
     var properties = JSON.parse(_data);
     if (properties.nextRecordsUrl != undefined) {
       var req = new XMLHttpRequest();
@@ -1324,7 +1326,9 @@ var sfnav = (function() {
     req.send();
   }
   function parseSysPropsLLCBI(_data) {
-    if (_data.length == 0) return;
+    if (_data.length == 0) {
+      return;
+    }
     var properties = JSON.parse(_data);
     if (properties.nextRecordsUrl != undefined) {
       var req = new XMLHttpRequest();
@@ -1338,7 +1342,6 @@ var sfnav = (function() {
     var action = {};
     if (properties.records) {
       properties.records.map( obj => {
-
         if (obj.attributes != null) {
           propRecord = obj.LLC_BI__Category_Name__c, obj.LLC_BI__Key__c, obj.Name, obj.Id;
 
@@ -1364,12 +1367,13 @@ var sfnav = (function() {
     req.send();
   }
   function parseFlows(_data) {
-    if (_data.length == 0) return;
+    if (_data.length == 0) {
+      return;
+    }
     var properties = JSON.parse(_data);
     var action = {};
     if (properties.records) {
       properties.records.map( obj => {
-
         if (obj.attributes != null) {
           propRecord = obj.DeveloperName, obj.Id;
 
@@ -1395,12 +1399,13 @@ var sfnav = (function() {
     req.send();
   }
   function parseLabels(_data) {
-    if (_data.length == 0) return;
+    if (_data.length == 0) {
+      return;
+    }
     var properties = JSON.parse(_data);
     var action = {};
     if (properties.records) {
       properties.records.map( obj => {
-
         if (obj.attributes != null) {
           propRecord = obj.DeveloperName, obj.Id;
 
