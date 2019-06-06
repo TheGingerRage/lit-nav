@@ -793,6 +793,7 @@ var sfnav = (function() {
     }
     req.send();
   }
+
   function parseLimits(_data) {
     if (_data.length == 0) return;
     var properties = JSON.parse(_data);
@@ -895,6 +896,7 @@ var sfnav = (function() {
     getSysPropsNFORCEDef();
     getSysPropsLLCBIDef();
     getFlowsDef();
+    getCustomLabels();
   }
 
   function parseSetupTree(html)
@@ -1117,9 +1119,7 @@ var sfnav = (function() {
 
         setVisible("hidden");
         setVisibleSearch("hidden");
-
       }
-
     });
 
     Mousetrap.wrap(searchBar).bind('enter', kbdCommand);
@@ -1296,20 +1296,21 @@ var sfnav = (function() {
       req.send();
     }
     var action = {};
-    properties.records.map( obj => {
+    if (properties.records) {
+      properties.records.map( obj => {
+        if (obj.attributes != null) {
+          propRecord = obj.nFORCE__Category_Name__c, obj.nFORCE__Key__c, obj.Name, obj.Id;
 
-      if (obj.attributes != null) {
-        propRecord = obj.nFORCE__Category_Name__c, obj.nFORCE__Key__c, obj.Name, obj.Id;
-
-        action = {
-          key: obj.name,
-          keyPrefix: obj.Id,
-          url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+          action = {
+            key: obj.name,
+            keyPrefix: obj.Id,
+            url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+          }
+          cmds['Setup > System Property (nFORCE) > ' + obj.nFORCE__Category_Name__c + ' > ' + obj.nFORCE__Key__c] = action;
         }
-        cmds['Setup > System Property (nFORCE) > ' + obj.nFORCE__Category_Name__c + ' > ' + obj.nFORCE__Key__c] = action;
-      }
-    });
-    store('Store Commands', cmds);
+      });
+      store('Store Commands', cmds);
+    }
   }
   function getSysPropsLLCBIDef() {
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
@@ -1335,20 +1336,22 @@ var sfnav = (function() {
       req.send();
     }
     var action = {};
-    properties.records.map( obj => {
+    if (properties.records) {
+      properties.records.map( obj => {
 
-      if (obj.attributes != null) {
-        propRecord = obj.LLC_BI__Category_Name__c, obj.LLC_BI__Key__c, obj.Name, obj.Id;
+        if (obj.attributes != null) {
+          propRecord = obj.LLC_BI__Category_Name__c, obj.LLC_BI__Key__c, obj.Name, obj.Id;
 
-        action = {
-          key: obj.name,
-          keyPrefix: obj.Id,
-          url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+          action = {
+            key: obj.Name,
+            keyPrefix: obj.Id,
+            url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
+          }
+          cmds['Setup > System Property (LLC_BI) > ' + obj.LLC_BI__Category_Name__c + ' > ' + obj.LLC_BI__Key__c] = action;
         }
-        cmds['Setup > System Property (LLC_BI) > ' + obj.LLC_BI__Category_Name__c + ' > ' + obj.LLC_BI__Key__c] = action;
-      }
-    });
-    store('Store Commands', cmds);
+      });
+      store('Store Commands', cmds);
+    }
   }
   function getFlowsDef() {
     var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+DeveloperName+FROM+FlowDefinition';
@@ -1375,6 +1378,36 @@ var sfnav = (function() {
           url: serverInstance + '/' + obj.Id
         }
         cmds['Setup > Flow > ' + obj.DeveloperName] = action;
+      }
+    });
+    store('Store Commands', cmds);
+  }
+  function getCustomLabels() {
+    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value+FROM+ExternalString';
+    var req = new XMLHttpRequest();
+    req.open("GET", toolingUrl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseLabels(response.target.responseText);
+    }
+    req.send();
+  }
+  function parseLabels(_data) {
+    if (_data.length == 0) return;
+    var properties = JSON.parse(_data);
+    var action = {};
+    properties.records.map( obj => {
+
+      if (obj.attributes != null) {
+        propRecord = obj.DeveloperName, obj.Id;
+
+        action = {
+          key: obj.Name,
+          keyPrefix: obj.Id,
+          url: serverInstance + '/' + obj.Id
+        }
+        cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Name] = action;
+        cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Value] = action;
       }
     });
     store('Store Commands', cmds);
