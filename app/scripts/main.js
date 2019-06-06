@@ -1403,6 +1403,15 @@ var sfnav = (function() {
       return;
     }
     var properties = JSON.parse(_data);
+    if (properties.nextRecordsUrl != undefined) {
+      var req = new XMLHttpRequest();
+      req.open("GET", properties.nextRecordsUrl, true);
+      req.setRequestHeader("Authorization", sid);
+      req.onload = function(response) {
+        parseLabels(response.target.responseText);
+      }
+      req.send();
+    }
     var action = {};
     if (properties.records) {
       properties.records.map( obj => {
