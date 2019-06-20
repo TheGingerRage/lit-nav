@@ -70,7 +70,7 @@ This shows at a glance statistics of your organizational limits along with remai
 ------------
 
 #### Create Field
-Usage: `cf`
+Usage: `cf` **(Classic Only)**
 
 The cf (create field) command can be used in conjunction with an object API name like `Account`, a name for a new field, a type like `TEXT`, along with any necessary parameters depending on type, to create a new field on that object.
 
