@@ -2,7 +2,7 @@
 
 This extension helps you get to any Salesforce page quickly. Just type in what you need to do!
 
-##Commands
+## Commands
 
 #### Refresh Metadata
 Syntax: `Refresh Metadata` **(Classic Only)**
@@ -36,7 +36,7 @@ This will navigate to the profile of the System Administrator.  In this case, it
 
 ------------
 
-- ** sys prop doc man upload**
+- **sys prop doc man upload**
 
 This will navigate to the nFORCE System Property that controls the upload limit for docman. 
 The fully qualified command will look like this: `Setup > System Property (nFORCE) > document manager > upload mb limit`
