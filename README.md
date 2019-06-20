@@ -22,7 +22,7 @@ Syntax: `Setup <Category> <Subcategory/Key> <Destination>`
 
 Any of the four components to this command are optional, and do not require entire words. Think of this as executing a large search against an index of locations. The more specific you are with your search words, the more accurate the results will be.
 
-***This is not limited to custom objects.  The following are also searcable: Apex Classes, Apex Triggers, VisualForce Pages, VisualForce Components, Profiles, Users, Custom Settings, Flows, and Custom Labels. ***
+***This is not limited to custom objects.  The following are also searcable: Apex Classes, Apex Triggers, VisualForce Pages, VisualForce Components, Profiles, Users, Custom Settings, Flows, and Custom Labels.***
 
 ***Custom Settings are searchable by Category and/or Key.
 Custom Labels are searchable by Category and Name, and by Category and Value.
