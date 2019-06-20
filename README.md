@@ -1,41 +1,238 @@
 # Lightning Navigator
 
-This extension helps you get to any Salesforce page quickly. Just type in what you need to do.
+This extension helps you get to any Salesforce page quickly. Just type in what you need to do!
 
-- All objects list views and create new pages are available (even for objects that don't have tabs). Type in "List <Object Name>" or "New <Object Name>"
+## Commands
 
-- All setup links are available -- Type in "Setup" to see all. For example, if you want to get to the Account fields setup, type in "Account Fields". Or any custom object setup page, type "setup <Custom Object Name>"
+#### Refresh Metadata
+Syntax: `Refresh Metadata` **(Classic Only)**
 
-- Thanks to the SF tooling API, you can now create fields. "cf Account newField TEXT 100."
+Forces the extension to retrieve metadata from the Salesforce org. Use this if you see that commands aren't populating in the extension.
 
-- The original Salesforce Navigator was seemingly abandoned. I added the little bit needed to support Lightning. I renamed it to prevent confusion on the Chrome Store, and as I maintain the project moving forward.
+------------
 
-- Run "Refresh Metadata" from Lightning Navigator in Salesforce Classic. From that point you can navigate and use the extenion from Lightning.
+#### Setup 
+Syntax: `Setup`
+As a standalone command, this acts as a navigational shortcut to Setup.
 
-## New features added this version
+------------
 
-- Type in "orglimits" and press enter to see the current Org Limits displayed below in a scrollable list. Delete "orglimits" to return to using Lightning Navigator normally.
+#### General Navigation
+Syntax: `Setup <Category> <Subcategory/Key> <Destination>`
 
-- Added navigation to the following by name: Apex Classes, Apex Triggers, Apex Pages, Users, Profiles, VisualForce Pages, VisualForce Components, Flows
+Any of the four components to this command are optional, and do not require entire words. Think of this as executing a large search against an index of locations. The more specific you are with your search words, the more accurate the results will be.
 
-- Added navigation to nForce and LLC_BI System Properties by Category and Key (eg: Setup > System Property (nFORCE) > document manager > archive_browser_visible)
+***This is not limited to custom objects.  The following are also searcable: Apex Classes, Apex Triggers, VisualForce Pages, VisualForce Components, Profiles, Users, Custom Settings, Flows, and Custom Labels. ***
 
-## Bug Fixes and Other Cleanup
+***Custom Settings are searchable by Category and/or Key.
+Custom Labels are searchable by Category and Name, and by Category and Value.
+All others listed are searchable by Name only at this time.***
 
-- Refresh Metadata won't glitch out on VF pages causing the extension to fill up with "undefined"
+Here are two examples:
 
-- Refresh Metadata also elegantly fails in Lightning now, rather than showing a loading indicator for a minute then doing nothing.
+- **setup Profile System Administrator**
 
-- Cleaned up some DOM interaction with appendChild/removeChild calls being mishandled
+This will navigate to the profile of the System Administrator.  In this case, it would be faster to just enter `System Administrator` and find `Setup > Profile > System Administrator` on the list of matching commands.
 
-- Cleaned up some spacing and casing stuff that bugged me
+------------
 
-## Getting Started
+- **sys prop doc man upload**
+
+This will navigate to the nFORCE System Property that controls the upload limit for docman. 
+The fully qualified command will look like this: `Setup > System Property (nFORCE) > document manager > upload mb limit`
+
+------------
+
+#### Lists
+Syntax: `List <Object/Custom Object>`
+
+- **List AccountDocuments**
+
+Takes the user to a list view for any object type, even those without tabs. This command is also compatible with things like Apex Classes, Visualforce Components, Jobs, Logs, pretty much anything you can get to from setup. Play around with it!
+
+------------
+
+#### New
+Syntax: `New <Object/Custom Object>`
+
+- **New Collateral**
+
+Takes the user to the create page for any object type, again, even those without tabs. Much like list, this works with just about anything. If used from Lightning, it may take the user back to Classic on the way to the creation page.
+
+------------
+
+#### Organization Limits 
+Syntax: `OrgLimits` **(Classic Only)**
+
+This shows at a glance statistics of your organizational limits along with remaining values.
+[![org](https://i.imgur.com/kkeKa2p.png "org")](https://i.imgur.com/kkeKa2p.png "org")
+
+------------
+
+#### Create Field
+Usage: `cf`
+
+The cf (create field) command can be used in conjunction with an object API name like `Account`, a name for a new field, a type like `TEXT`, along with any necessary parameters depending on type, to create a new field on that object.
+
+Usage: `cf <Object API Name> <Field Name> <Data Type>`
+
+Data Type Syntax and Examples:
+
+------------
+
+- `AUTONUMBER`
+
+**cf Account TestAutonumber AUTONUMBER**
+
+------------
+
+- `CHECKBOX`
+
+**cf Account TestCheckbox CHECKBOX**
+
+------------
+
+- `CURRENCY <Scale> <Precision>`
+
+**cf Account TestCurrency CURRENCY 8 2**
+
+------------
+
+- `DATE`
+
+**cf Account TestDate DATE**
+
+------------
+
+- `DATETIME`
+
+**cf Account TestDateTime DATETIME**
+
+------------
+
+- `EMAIL`
+
+**cf Account TestEmail EMAIL**
+
+------------
+
+- `GEOLOCATION <Scale>`
+
+**cf Account TestGPS GEOLOCATION 5**
+
+------------
+
+- `LOOKUP <sObject API Name>`
+
+**cf Account TestLookupLoan LOOKUP Opportunity**
+
+(When using custom objects, full API names must be used)
+
+------------
+
+- `NUMBER <Scale> <Precision>`
+
+**cf Account TestNumber NUMBER 8 2**
+
+------------
+
+- `PERCENT <Scale> <Precision>`
+
+**cf Account TestPercent PERCENT 3 2**
+
+------------
+
+- `PHONE`
+
+**cf Account TestPhone PHONE**
+
+------------
+
+- `PICKLIST`
+
+**cf Account TestPicklist PICKLIST**
+
+(The picklist will have a filler value and will need to be changed)
+
+------------
+
+- `PICKLISTMS`
+
+**cf Account TestMultiSelectPicklist PICKLISTMS**
+
+(The picklist will have a filler value and will need to be changed)
+
+------------
+
+- `TEXT <Length>`
+
+**cf Account TestText TEXT 40**
+
+------------
+
+- `TEXTAREA`
+
+**cf Account TestTextArea TEXTAREA**
+
+------------
+
+- `TEXTAREALONG <Length> <Visible Lines>`
+
+**cf Account TestTextAreaLong TEXTAREALONG 256 5**
+
+(Minimum length of 256)
+
+------------
+
+- `TEXTAREARICH <Length> <Visible Lines>`
+
+**cf Account TestTextAreaRich TEXTAREARICH 256 10**
+
+(Minimum length of 256, minimum visible lines of 10)
+
+------------
+
+- `URL`
+
+**cf Account TestURL URL**
+
+------------
+
+## Patch Notes
+
+### 0.2.1
+
+- Fixed bug where the modal would vanish when clicking the `OrgLimits` command, making the results impossible to read.
+- `OrgLimits` properly clears out the search bar after executing the command.
+- `OrgLimits` will throw an error in Lightning and VisualForce, rather than churn and do nothing.
+- Fixed bug with precision not being passed properly by forceTooling when attempting to create certain field types.
+- Fixed bug where creating a new `TEXTAREALONG` or `TEXTAREARICH` would use the character count for the number of visible lines.
+- Corrected help text typo on `TEXTAREA` creation.
+- Added details for commands to this lovely Readme.
+
+### 0.2.0
+- Added navigation to Custom Labels by Category > Name OR by Category > Value. This is a lot of data to load so please be patient on orgs that approach that 10,000 label mark. It takes a second to append all the information.
+- Minor code formatting fixes and domain addressing cleanup.
+
+### 0.1.1
+ - Type in `OrgLimits` and press enter to see the current Org Limits displayed below in a scrollable list. Delete `OrgLimits` to return to using Lightning Navigator normally.
+ - Added navigation to the following by name: Apex Classes, Apex Triggers, Apex Pages, Users, Profiles, VisualForce Pages, VisualForce Components, Flows
+ - Added navigation to nForce and LLC_BI System Properties by Category and Key (eg: Setup > System Property (nFORCE) > document manager > archive_browser_visible)
+
+ - Refresh Metadata won't glitch out on VF pages causing the extension to fill up with "undefined"
+ - Refresh Metadata also elgeantly fails in Lightning now, rather than showing a loading indicator for a minute then doing nothing.
+ - Cleaned up some DOM interaction with appendChild/removeChild calls being mishandled
+
+------------
+
+## For Devs
+
+### Getting Started
 Project was scaffolded using [Yeoman](http://yeoman.io/) using [generator-chrome-extension](https://github.com/yeoman/generator-chrome-extension)
 
-## Test
+### Test
 To test, go to: chrome://extensions, enable Developer mode and load app as an unpacked extension.
 
-## License
+### License
 [MIT License](http://en.wikipedia.org/wiki/MIT_License)
 

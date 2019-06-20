@@ -81,7 +81,7 @@ if (forceTooling.CustomFields === undefined) {
     this.type = type;
     this.inlineHelpText = helpText;
     this.length = parseInt(length);
-    if(this.precision != null) this.precision = parseInt(leftDecimals + rightDecimals);
+    if(leftDecimals != null && rightDecimals != null) this.precision = parseInt(leftDecimals + rightDecimals);
     this.scale = rightDecimals;
     if(picklistValues !== null)
     {
@@ -400,21 +400,21 @@ if (forceTooling.Client === undefined) {
   };
 
   // queryFieldsByName
-  forceTooling.Client.prototype.queryFieldsByName = function(name, callback, error) {
-    var queryString = forceTooling.CustomFields.queryString + ' WHERE Fullname=\'' + name + '\'';
-    return forceTooling.Client.prototype.query(this.queryString,callback,error);
+  forceTooling.Client.prototype.queryFieldsByName = function(name, objectName, callback, error) {
+    var queryString = forceTooling.CustomFields.queryString + ' WHERE DeveloperName=\'' + name + '\' AND TableEnumOrId=\'' + objectName + '\'';
+    return forceTooling.Client.prototype.query(queryString,callback,error);
   };
 
   // queryFieldsById
   forceTooling.Client.prototype.queryFieldsById = function(id, callback, error) {
     var queryString = forceTooling.CustomFields.queryString + ' WHERE Id=\'' + id + '\'';
-    return forceTooling.Client.prototype.query(this.queryString,callback,error);
+    return forceTooling.Client.prototype.query(queryString,callback,error);
   };
 
   // queryFieldsForObject
   forceTooling.Client.prototype.queryFieldsForObject = function(objectName, callback, error) {
     var queryString = forceTooling.CustomFields.queryString + ' WHERE TableEnumOrId=\'' + objectName + '\'';
-    return forceTooling.Client.prototype.query(this.queryString,callback,error);
+    return forceTooling.Client.prototype.query(queryString,callback,error);
   };
 
   // queryLogsById
@@ -425,7 +425,7 @@ if (forceTooling.Client === undefined) {
   // queryLogsById
   forceTooling.Client.prototype.queryLogsByUserId = function(userId, callback, error) {
     var queryString = forceTooling.ApexLogs.queryString + ' WHERE LogUserId=\'' + userId + '\'';
-    return forceTooling.Client.prototype.query(this.queryString,callback,error);
+    return forceTooling.Client.prototype.query(queryString,callback,error);
   };
 
   // queryLogBodyByLogId
