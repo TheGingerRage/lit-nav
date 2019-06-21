@@ -358,7 +358,10 @@ var sfnav = (function() {
     var errorText = '';
     err.appendChild(document.createTextNode('Success! '));
     err.appendChild(document.createElement('br'));
-    err.appendChild(document.createTextNode('Field ' + text.id + ' created!'));
+    var link = document.createElement('a');
+    link.href = text.id;
+    link.innerText = 'Field ' + text.id + ' created!';
+    err.appendChild(link);
     outp.appendChild(err);
 
     setVisible("visible");
@@ -490,7 +493,7 @@ var sfnav = (function() {
           return;
         }
         if (location.origin.indexOf('lightning.force') !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: In Lightning Experience, try from Classic';
+          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: Does not work in Lightning, try in Classic';
           clearOutput();
           return;
         }
@@ -513,11 +516,33 @@ var sfnav = (function() {
       }
     if (cmd.toLowerCase().substring(0,9) == 'login as ')
       {
+        if (location.origin.indexOf("visual.force") !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Creation failed: Inside VisualForce, try from Setup';
+          clearOutput();
+          return;
+        } else if (location.origin.indexOf('lightning.force') !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Creation failed: Does not work in Lightning, try in Classic';
+          clearOutput();
+          return;
+        } else {
+          document.getElementById('sfnav_quickSearch').value = '';
+        }
         loginAs(cmd);
         return true;
       }
     if (cmd.toLowerCase().substring(0,9) == 'orglimits')
       {
+        if (location.origin.indexOf("visual.force") !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Retrieval failed: Inside VisualForce, try from Setup';
+          clearOutput();
+          return;
+        } else if (location.origin.indexOf('lightning.force') !== -1) {
+          document.getElementById('sfnav_quickSearch').value = 'Retrieval failed: Does not work in Lightning, try in Classic';
+          clearOutput();
+          return;
+        } else {
+          document.getElementById('sfnav_quickSearch').value = '';
+        }
         getLimits();
         return true;
       }
@@ -832,9 +857,13 @@ var sfnav = (function() {
           keyPrefix: obj.keyPrefix,
           url: serverInstance + '/' + obj.keyPrefix
         }
-        cmds['List ' + mRecord.labelPlural] = act;
-        cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name];
-
+        if (mRecord.name.indexOf('__') != -1 && mRecord.name.indexOf('__') != mRecord.name.indexOf('__c')) {
+          cmds['List ' + mRecord.labelPlural + ' (' + mRecord.name.split('__')[0] + ')'] = act;
+          cmds['List ' + mRecord.labelPlural + ' (' + mRecord.name.split('__')[0] + ')']['synonyms'] = [obj.name];
+        } else {
+          cmds['List ' + mRecord.labelPlural] = act;
+          cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name];
+        }
         act = {
           key: obj.name,
           keyPrefix: obj.keyPrefix,
