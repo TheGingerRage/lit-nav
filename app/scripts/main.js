@@ -107,8 +107,13 @@ var sfnav = (function() {
       setVisible("hidden");
       posi = -1;
       oldins = this.firstChild.nodeValue;
-      setVisibleSearch("hidden");
-      setVisible("hidden");
+      if (oldins == 'OrgLimits') {
+        setVisibleSearch("visible");
+        setVisible("visible");
+      } else {
+        setVisibleSearch("hidden");
+        setVisible("hidden");
+      }
       invokeCommand(this.firstChild.nodeValue,false,'click');
       clearOutput();
       searchBar.value = '';
@@ -215,7 +220,7 @@ var sfnav = (function() {
 
               break;
               case 'TEXTAREA':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
+              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
               break;
               case 'TEXTAREALONG':
               words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
@@ -511,11 +516,6 @@ var sfnav = (function() {
       }
     if (cmd.toLowerCase().substring(0,3) == 'cf ')
       {
-        createField(cmd);
-        return true;
-      }
-    if (cmd.toLowerCase().substring(0,9) == 'login as ')
-      {
         if (location.origin.indexOf("visual.force") !== -1) {
           document.getElementById('sfnav_quickSearch').value = 'Creation failed: Inside VisualForce, try from Setup';
           clearOutput();
@@ -527,10 +527,15 @@ var sfnav = (function() {
         } else {
           document.getElementById('sfnav_quickSearch').value = '';
         }
+        createField(cmd);
+        return true;
+      }
+    if (cmd.toLowerCase().substring(0,9) == 'login as ')
+      {
         loginAs(cmd);
         return true;
       }
-    if (cmd.toLowerCase().substring(0,9) == 'orglimits')
+    if (cmd.toLowerCase() == 'orglimits')
       {
         if (location.origin.indexOf("visual.force") !== -1) {
           document.getElementById('sfnav_quickSearch').value = 'Retrieval failed: Inside VisualForce, try from Setup';
@@ -546,64 +551,7 @@ var sfnav = (function() {
         getLimits();
         return true;
       }
-
     return false;
-  }
-
-  function updateField(cmd)
-  {
-    var arrSplit = cmd.split(' ');
-    var dataType = '';
-    var fieldMetadata;
-
-    if (arrSplit.length >= 3)
-      {
-        for (var key in META_DATATYPES)
-          {
-            if (META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
-              {
-                dataType = META_DATATYPES[key].name;
-                break;
-              }
-          }
-
-        var sObjectName = arrSplit[1];
-        var fieldName = arrSplit[2];
-        var helpText = null;
-        var typeLength = arrSplit[4];
-        var rightDecimals, leftDecimals;
-        if (parseInt(arrSplit[5]) != NaN )
-          {
-            rightDecimals = parseInt(arrSplit[5]);
-            leftDecimals = typeLength;
-          }
-        else
-          {
-            leftDecimals = 0;
-            rightDecimals = 0;
-          }
-
-        ftClient.queryByName('CustomField', fieldName, sObjectName, function(success) {
-          addSuccess(success);
-          fieldMeta = new  forceTooling.CustomFields.CustomField(arrSplit[1], arrSplit[2], dataType, null, arrSplit[4], parseInt(leftDecimals),parseInt(rightDecimals),null);
-
-          ftClient.update('CustomField', fieldMeta,
-            function(success) {
-              console.log(success);
-              addSuccess(success);
-            },
-            function(error) {
-              console.log(error);
-              addError(error.responseJSON);
-            });
-        },
-          function(error)
-          {
-            addError(error.responseJSON);
-          });
-
-
-      }
   }
 
   function createField(cmd)
@@ -614,17 +562,6 @@ var sfnav = (function() {
 
     if (arrSplit.length >= 3)
       {
-        //  forceTooling.Client.create(whatever)
-        /*
-           for (var key in META_DATATYPES)
-           {
-           if (META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
-           {
-           dataType = META_DATATYPES[key].name;
-           break;
-           }
-           }
-         */
         dataType = META_DATATYPES[arrSplit[3].toUpperCase()].name;
         var sObjectName = arrSplit[1];
         var sObjectId = null;
@@ -714,13 +651,13 @@ var sfnav = (function() {
           fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
           break;
           case 'TEXTAREA':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,null);
+          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
           break;
           case 'TEXTAREALONG':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[4]);
+          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[5]);
           break;
           case 'TEXTAREARICH':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[4]);
+          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[5]);
           break;
           case 'URL':
           fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
