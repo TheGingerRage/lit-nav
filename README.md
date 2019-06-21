@@ -200,6 +200,13 @@ Data Type Syntax and Examples:
 
 ## Patch Notes
 
+### 0.2.2
+
+- Added a 'feature' to the `List` command that will suffix the object with the package namespace. eg: `List Products (LLC_BI)` This will prevent custom object names with the same name (cross-package or Salesforce) from de-duping into a single incorrect navigation point.
+- Added an error message when attempting to us the `cf` command from VisualForce/Lightning.
+- Added a link to the success result from `cf` to allow the user to navigate directly to the newly created field.
+- Updated the error messages recieved when hitting VisualForce/Lightning stoppage.
+
 ### 0.2.1
 
 - Fixed bug where the modal would vanish when clicking the `OrgLimits` command, making the results impossible to read.
