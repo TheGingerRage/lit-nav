@@ -200,6 +200,10 @@ Data Type Syntax and Examples:
 
 ## Patch Notes
 
+### 0.2.3
+
+- Fixed the link generation for `cf`.
+
 ### 0.2.2
 
 - Added a 'feature' to the `List` command that will suffix the object with the package namespace. eg: `List Products (LLC_BI)` This will prevent custom object names with the same name (cross-package or Salesforce) from de-duping into a single incorrect navigation point.
