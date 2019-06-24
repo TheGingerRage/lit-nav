@@ -364,7 +364,7 @@ var sfnav = (function() {
     err.appendChild(document.createTextNode('Success! '));
     err.appendChild(document.createElement('br'));
     var link = document.createElement('a');
-    link.href = text.id;
+    link.href = serverInstance + '/' + text.id;
     link.innerText = 'Field ' + text.id + ' created!';
     err.appendChild(link);
     outp.appendChild(err);
