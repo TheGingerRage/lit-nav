@@ -43,7 +43,7 @@ chrome.runtime.onMessage.addListener(
     }
     if(request.action == 'Get Settings')
     {
-      var settings = localStorage.getItem('sfnav_settings');
+      var settings = localStorage.getItem('litnav_settings');
       console.log('settings: ' + settings);
       if(settings != null)
       {
@@ -53,18 +53,18 @@ chrome.runtime.onMessage.addListener(
       {
         var sett = {};
         sett['shortcut'] = 'ctrl+shift+space';
-        localStorage.setItem('sfnav_settings', JSON.stringify(sett));
+        localStorage.setItem('litnav_settings', JSON.stringify(sett));
         sendResponse(sett);
       }
     }
     if(request.action == 'Set Settings')
     {
-      var settings = localStorage.getItem('sfnav_settings');
+      var settings = localStorage.getItem('litnav_settings');
       if(settings != null)
       {
         var sett = JSON.parse(settings);
         sett[request.key] = request.payload;
-        localStorage.setItem('sfnav_settings', JSON.stringify(sett));
+        localStorage.setItem('litnav_settings', JSON.stringify(sett));
       }
       sendResponse({});
     }
@@ -85,5 +85,35 @@ chrome.runtime.onMessage.addListener(
         sendResponse(metadata[orgKey]);
       else
         sendResponse(null);
+    }
+    if(request.action == 'Lightning Metadata') {
+      var newLocation = sender.tab.url.split('/lightning')[0] + '/ui/setup/Setup';
+      chrome.tabs.create({ url: newLocation, active:false }, function(tab){
+        setTimeout(function() {
+          chrome.tabs.remove(tab.id, function() {});
+        }, 3000);
+      })
+      .onload = function() {
+        setTimeout(function() {
+          getAllObjectMetadata();
+        }, 2000);
+      };   
+
+      sendResponse(null);
+    }
+    if(request.action == 'VisualForce Metadata') {
+      var newLocation = sender.tab.url.split('--')[0] + '--' + sender.tab.url.split('--')[1] + '.' + sender.tab.url.split('--')[2].split('.')[1] + '.cloudforce.com/ui/setup/Setup';
+      chrome.tabs.create({ url: newLocation, active:false }, function(tab){
+        setTimeout(function() {
+          chrome.tabs.remove(tab.id, function() {});
+        }, 3000);
+      })
+      .onload = function() {
+        setTimeout(function() {
+          getAllObjectMetadata();
+        }, 2000);
+      };
+
+      sendResponse(null);
     }
   });

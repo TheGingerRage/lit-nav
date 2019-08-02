@@ -1,6 +1,6 @@
 {
     "name": "Lightning Navigator",
-    "version": "0.2.3",
+    "version": "0.3.0",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
@@ -44,6 +44,7 @@
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
         "https://*.cloudforce.com/*",
-        "storage"
+        "storage",
+        "tabs"
     ]
 }

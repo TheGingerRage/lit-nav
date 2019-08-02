@@ -1,4 +1,4 @@
- #sfnav_search_box {
+ #litnav_search_box {
  	/*height:50%;*/
   opacity: 0.98;
  	overflow:hidden;
@@ -22,23 +22,23 @@
     background-color: white;
   font-family: Helvetica, Arial, sans-serif;
  }
- #sfnav_search_box .sfnav_wrapper {
+ #litnav_search_box .litnav_wrapper {
  	background:white;
  	/*padding:13px 0 10px 8px;*/
  	position:relative;
   height: 48px;
   display: flex;
  }
-  #sfnav_search_box .sfnav_output {
+  #litnav_search_box .litnav_output {
     max-height:240px;
  	overflow:auto;
  }
- .sfnav_shadow {
+ .litnav_shadow {
  	max-height:100%;
  	overflow:auto;
  	/*padding-top: 15px;*/
  }
- .sfnav_child {
+ .litnav_child {
     display:block;
  	/*font:bold 18px Helvetica, Arial, sans-serif;*/
  	color:#000;
@@ -46,7 +46,7 @@
   text-decoration: none;
  	/*text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
  }
- #sfnav_search_box input {
+ #litnav_search_box input {
   position: relative;
   flex: 1;
   /* margin-top: auto; */
@@ -61,19 +61,19 @@
   font-size:24px;
  	/*font:bold 24px Helvetica, Arial, sans-serif;*/
  }
- .sfnav_selected {
+ .litnav_selected {
  	background-color:#f0f0f0;
  	color:black;
 
  }
 
-#sfnav_logo {
+#litnav_logo {
   width:48px;
   height:48px;
   display: inline-block;
 }
 
-#sfnav_loader {
+#litnav_loader {
   visibility: hidden;
   display: inline-block;
   /* flex: 1; */
@@ -83,3 +83,76 @@
   margin-bottom: auto;
 }
 
+#litnav_labels {
+  opacity: 0.98;
+  overflow-y:auto;
+  overflow-x:hidden;
+  z-index: 9999;
+  background-color:#1797c0;
+  border-radius:5px;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  top:10%;
+  left:10%;
+  position:fixed;
+  padding:9px;
+  width:80%;
+  height:80%;
+  visibility: hidden;
+   box-shadow: rgba(0, 0, 0, 0.490196) 0px 6px 20px 0px;
+   border-top-left-radius: 2px;
+   border-top-right-radius: 2px;
+   border-bottom-right-radius: 2px;
+   border-bottom-left-radius: 2px;
+
+   background-color: white;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  text-decoration: none;
+}
+.litnav_labels_tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+.litnav_labels_tab button {
+  background-color: #345;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: 0.3s;
+  font-size: 12px;
+}
+.litnav_labels_tab button:hover {
+  background-color: #345;
+}
+.litnav_labels_tab button.active {
+  background-color: #345;
+}
+.litnav_labels_tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+.c1 {
+  width: 19%;
+}
+.c2 {
+  width: 31%;
+}
+.c3 {
+  width: 40%;
+}
+.c4 {
+  width: 5%;
+}
+.c5 {
+  width: 5%;
+}
