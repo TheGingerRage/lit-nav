@@ -26,8 +26,7 @@ var litnav = (function() {
   var sid;
   var SFAPI_VERSION = 'v33.0';
   var ftClient;
-  var rowColor = '#ffffff';
-  var labelNamespaces = new Set([]);
+  var labelData = [];
   var customObjects = {};
   var META_DATATYPES = {
     "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
@@ -326,6 +325,11 @@ var litnav = (function() {
     t.style.visibility = visi;
     if (visi=='visible') document.getElementById("litnav_quickSearch").focus();
   }
+  function setVisibleLabel(visi) {
+    var t = document.getElementById("litnav_labels");
+    t.style.visibility = visi;
+    if (visi=='visible') document.getElementById("litnav_quickSearch").focus();
+  }
 
   function lookAt() {
     let newSearchVal = document.getElementById('litnav_quickSearch').value
@@ -535,7 +539,9 @@ var litnav = (function() {
             );
             searchBar.value = '';
             setVisible("visible");
-          }, 2000);
+            renderLabels();
+          }, 4000);
+
           return;
         }
 
@@ -549,8 +555,6 @@ var litnav = (function() {
     if (cmd.toLowerCase() == 'clabels')
       {
         setLabelVis('visible');
-        console.log('trying manual mode');
-        // TODO
       }
     if (cmd.toLowerCase() == 'setup')
       {
@@ -1131,6 +1135,7 @@ var litnav = (function() {
 
         setVisible("hidden");
         setVisibleSearch("hidden");
+        setVisibleLabel("hidden");
       }
     });
 
@@ -1429,7 +1434,10 @@ var litnav = (function() {
     }
   }
   function getCustomLabels() {
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value,+NamespacePrefix+FROM+ExternalString+ORDER+BY+Category';
+    if (sid == null) {
+      sid = "Bearer " + getCookie('sid');
+    }
+    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value,+NamespacePrefix+FROM+ExternalString+ORDER+BY+NamespacePrefix,+Category';
     var req = new XMLHttpRequest();
     req.open("GET", toolingUrl, true);
     req.setRequestHeader("Authorization", sid);
@@ -1438,11 +1446,14 @@ var litnav = (function() {
     }
     req.send();
   }
+
   function parseLabels(_data) {
     if (_data.length == 0) {
       return;
     }   
     var properties = JSON.parse(_data);
+    labelData = labelData || [];
+    labelData.push(properties.records);
     if (properties.nextRecordsUrl != undefined) {
       var req = new XMLHttpRequest();
       req.open("GET", properties.nextRecordsUrl, true);
@@ -1453,19 +1464,31 @@ var litnav = (function() {
       req.send();
     }
 
-    if (properties.records) {
-      properties.records.map( obj => {
+    store('Store Labels', labelData);
+  }
+
+  function renderLabels() {
+    chrome.runtime.sendMessage({
+      action:'Get Labels', 'key': hash},
+      function(response) {
+        labelData = response;
+        var properties = [];
+        for (var i = 0; i < labelData.length; i++) {
+          properties = properties.concat(labelData[i]);
+        }
+      if (properties) {
+      properties.map( obj => {
         if (obj.attributes != null) {
           propRecord = obj.DeveloperName, obj.Id;
-          var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : '(null)';
+          var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : 'Empty Namespace';
           var namespaceNode = document.getElementById('ltable-'+nameSpace);
           if (namespaceNode == null) {
             var node = document.createElement('div');
             node.setAttribute('id', nameSpace);
             node.setAttribute('class', 'litnav_labels_tabcontent');
-
             var table = document.createElement('table');
             table.setAttribute('id', 'ltable-' + nameSpace);
+            table.setAttribute('class', 'sortable');
             var col1 = document.createElement('col');
             col1.setAttribute('class', 'c1');
             table.appendChild(col1);
@@ -1481,30 +1504,37 @@ var litnav = (function() {
             var col5 = document.createElement('col');
             col5.setAttribute('class', 'c5');
             table.appendChild(col5);
+            var thead = document.createElement('thead');
             var headerRow = document.createElement('tr');
+            headerRow.setAttribute('id', 'header');
+            headerRow.setAttribute('class', 'litnav_row_header');
             headerRow.style.backgroundColor = '#ffffff';
 
-            var headerCat = document.createElement('td');
-            headerCat.innerHTML = '<b>Category</b>';
+            var headerCat = document.createElement('th');
+            headerCat.innerHTML = 'Category';
             headerRow.appendChild(headerCat);
             
-            var headerName = document.createElement('td');
-            headerName.innerHTML = '<b>Name</b>';
+            var headerName = document.createElement('th');
+            headerName.innerHTML = 'Name';
             headerRow.appendChild(headerName);
             
-            var headerValue = document.createElement('td');
-            headerValue.innerHTML = '<b>Value</b>';
+            var headerValue = document.createElement('th');
+            headerValue.innerHTML = 'Value';
             headerRow.appendChild(headerValue);
 
-            var headerRecord = document.createElement('td');
-            headerRecord.innerHTML = '<b>Record</b>';
+            var headerRecord = document.createElement('th');
+            headerRecord.innerHTML = ' ';
             headerRow.appendChild(headerRecord);
 
-            var headerTranslate = document.createElement('td');
-            headerTranslate.innerHTML = '<b>Translation</b>';
-
+            var headerTranslate = document.createElement('th');
+            headerTranslate.innerHTML = ' ';
             headerRow.appendChild(headerTranslate);
-            table.appendChild(headerRow);
+
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            var tbody = document.createElement('tbody');
+            tbody.setAttribute('id', 'lbody-' + nameSpace);
+            table.appendChild(tbody);
             node.appendChild(table);
 
             tabHolder = document.getElementById('tabHolder');
@@ -1521,18 +1551,21 @@ var litnav = (function() {
           }
 
           var row = document.createElement('tr');
-          row.style.backgroundColor = toggleRowColor();
+          row.setAttribute('class', 'litnav_row');
 
           var catCell = document.createElement('td');
           catCell.innerHTML = (obj.Category != null) ? obj.Category : '(null)';
+          catCell.setAttribute('class', 'data');
           row.appendChild(catCell);
           
           var nameCell = document.createElement('td');
           nameCell.innerHTML = obj.Name;
+          nameCell.setAttribute('class', 'data');
           row.appendChild(nameCell);
           
           var valueCell = document.createElement('td');
           valueCell.innerHTML = obj.Value;
+          valueCell.setAttribute('class', 'data');
           row.appendChild(valueCell);
 
           var idCell = document.createElement('td');
@@ -1543,22 +1576,17 @@ var litnav = (function() {
           translateCell.innerHTML = '<a href="' + serverInstance + '/01j/e?parentNmsp=' + nameSpace + '&retURL=%2F' + obj.Id + '&Parent=' + obj.Id + '">Translate</a>';
           row.appendChild(translateCell);
 
-          var tableString = 'ltable-' + nameSpace;
+          var bodyString = 'lbody-' + nameSpace;
 
-          var labelTable = document.getElementById(tableString);
-          labelTable.appendChild(row);
+          var labelBody = document.getElementById(bodyString);
+          var allTable = document.getElementById('lbody-All Namespaces')
+          labelBody.appendChild(row);
+          allTable.appendChild(row.cloneNode(true));
         }        
       });
     }
-  }
+  });
 
-  function toggleRowColor() {
-    if (rowColor == '#ffffff') {
-      rowColor = '#dddddd';
-    } else {
-      rowColor = '#ffffff';
-    }
-    return rowColor;
   }
 
   function openTab(evt) {
@@ -1574,6 +1602,36 @@ var litnav = (function() {
     }
     document.getElementById(tabName).style.display = 'block';
     evt.currentTarget.className += ' active';
+  }
+
+  function filterLabels(value) {
+    var cells = document.getElementsByClassName('data');
+    var rows = document.getElementsByTagName('tr');
+    var filteredRows = [];
+    if (value != '') {
+      for (i = 0; i < cells.length; i++) {
+        if (cells[i].innerHTML.toLowerCase().includes(value.toLowerCase()) || cells[i].parentNode.parentNode.tagName.toLowerCase() == 'thead') {
+          filteredRows.push(cells[i].parentNode);
+        }
+      }
+
+      for (i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+      }
+
+      for (i = 0; i < filteredRows.length; i++) {
+        filteredRows[i].style.display = '';
+      }
+    } else {
+      for (i = 0; i < rows.length; i++) {
+        rows[i].style.display = '';
+      }
+    }
+
+    var headers = document.getElementsByClassName('litnav_row_header');
+    for (i = 0; i < headers.length; i++) {
+      headers[i].style.display = '';
+    }
   }
 
   function init()
@@ -1598,16 +1656,47 @@ var litnav = (function() {
 
     var labelDiv = document.createElement('div');
     labelDiv.setAttribute('id', 'litnav_labels');
-    var tabDiv = document.createElement('div');
-    tabDiv.setAttribute('class', 'litnav_labels_tab');
-    labelDiv.appendChild(tabDiv);
-    var filterDiv = document.createElement('div');
-    filterDiv.setAttribute('class', 'litnav_filter');
-    labelDiv.appendChild(filterDiv);
-    tabHolderDiv = document.createElement('div');
-    tabHolderDiv.setAttribute('id', 'tabHolder');
-    labelDiv.appendChild(tabHolderDiv);
-    document.body.appendChild(labelDiv);
+    labelDiv.innerHTML = `
+      <div class="litnav_labels_tab">
+        <div class="litnav_filter">
+          <input id="litnav_filter_input" class="litnav_filter_input" value="Filter">
+        </div>
+        <button id="all_button" class="tablinks">All Namespaces</button>
+      </div>
+      <div id="tabHolder">
+        <div id="All Namespaces" class="litnav_labels_tabcontent">
+          <table id="ltable-All Namespaces" border="0" cellpadding="0" cellspacing="0" class="sortable">
+            <col class="c1">
+            <col class="c2">
+            <col class="c3">
+            <col class="c4">
+            <col class="c5">
+            <thead>
+              <tr id="header" class="litnav_row_header" style="background-color: rgb(255, 255, 255);">
+                <th>Category</th>
+                <th>Name</th>
+                <th>Value</th>
+                <th>Record</th>
+                <th>Translation</th>
+              </tr>
+            </thead>
+            <tbody id="lbody-All Namespaces">
+            </tbody>
+            <tfoot>
+            </tfoot>
+          </table>
+        </div>
+      </div>`;
+      document.body.appendChild(labelDiv);
+      var filterInput = document.getElementById('litnav_filter_input');
+      filterInput.onchange = function() {
+        filterLabels(filterInput.value);
+      }
+      var button = document.getElementById('all_button');
+      button.addEventListener('click', openTab);
+      button.tabName = 'All Namespaces';
+
+    
 
     outp = document.getElementById("litnav_output");
     labelp = document.getElementById("litnav_labels");
@@ -1633,9 +1722,16 @@ var litnav = (function() {
           metaData = {};
           getAllObjectMetadata();
         } else {
-          // ???
+          /// ???
         }
+
       });
+
+    if (document.getElementById('tabHolder').childNodes.length == 1) {
+      getCustomLabels();
+    } 
+
+    renderLabels();
 
     // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},
     //   function(response) {
