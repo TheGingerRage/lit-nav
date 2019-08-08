@@ -554,7 +554,6 @@ var litnav = (function() {
         setTimeout(function() {
           hideLoadingIndicator();
         }, 30000);
-        
         return true;
       }
     if (cmd.toLowerCase() == 'clabels')
