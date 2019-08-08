@@ -111,7 +111,7 @@ chrome.runtime.onMessage.addListener(
         setTimeout(function() {
           chrome.tabs.remove(tab.id, function() {});
         }, 4000);
-      })
+      });
 
       sendResponse(null);
     }
@@ -120,13 +120,8 @@ chrome.runtime.onMessage.addListener(
       chrome.tabs.create({ url: newLocation, active:false }, function(tab){
         setTimeout(function() {
           chrome.tabs.remove(tab.id, function() {});
-        }, 3000);
-      })
-      .onload = function() {
-        setTimeout(function() {
-          getAllObjectMetadata();
-        }, 2000);
-      };
+        }, 4000);
+      });
 
       sendResponse(null);
     }
