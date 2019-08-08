@@ -3,8 +3,10 @@
 // @copyright 2018+ Bryan Mitchell / nCino
 // http://ncino.com
 
-var sfnav = (function() {
+var litnav = (function() {
   var outp;
+  var labelp;
+  var tabHolder;
   var oldins;
   var posi = -1;
   var newTabKeys = [
@@ -22,8 +24,10 @@ var sfnav = (function() {
   var loaded=false;
   var shortcut;
   var sid;
+  var sort;
   var SFAPI_VERSION = 'v33.0';
   var ftClient;
+  var labelData = [];
   var customObjects = {};
   var META_DATATYPES = {
     "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
@@ -89,20 +93,20 @@ var sfnav = (function() {
 
   var mouseHandler=
     function() {
-      this.classList.add('sfnav_selected');
+      this.classList.add('litnav_selected');
       mouseClickLoginAsUserId = this.getAttribute("id");
       return true;
     }
 
   var mouseHandlerOut=
     function() {
-      this.classList.remove('sfnav_selected');
+      this.classList.remove('litnav_selected');
       return true;
     }
 
   var mouseClick=
     function() {
-      let searchBar = document.getElementById("sfnav_quickSearch");
+      let searchBar = document.getElementById("litnav_quickSearch");
       searchBar.value = this.firstChild.nodeValue;
       setVisible("hidden");
       posi = -1;
@@ -244,7 +248,7 @@ var sfnav = (function() {
           };
           outp.appendChild(docFragment);
           setVisible("visible");
-          input = document.getElementById("sfnav_quickSearch").value;
+          input = document.getElementById("litnav_quickSearch").value;
         }
         else {
           setVisible("hidden");
@@ -274,7 +278,7 @@ var sfnav = (function() {
           };
           outp.appendChild(docFragment);
           setVisible("visible");
-          input = document.getElementById("sfnav_quickSearch").value;
+          input = document.getElementById("litnav_quickSearch").value;
         }
         else{
           clearOutput();
@@ -282,9 +286,9 @@ var sfnav = (function() {
           posi = -1;
         }
       }
-    var firstEl = document.querySelector('#sfnav_output :first-child');
+    var firstEl = document.querySelector('#litnav_output :first-child');
 
-    if (posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+    if (posi == -1 && firstEl != null) firstEl.className = "litnav_child litnav_selected"
   }
 
   function httpGet(url, callback)
@@ -298,33 +302,43 @@ var sfnav = (function() {
     req.send();
   }
   function getVisible() {
-    return document.getElementById("sfnav_shadow").style.visibility;
+    return document.getElementById("litnav_shadow").style.visibility;
   }
   function isVisible() {
-    return document.getElementById("sfnav_shadow").style.visibility !== 'hidden';
+    return document.getElementById("litnav_shadow").style.visibility !== 'hidden';
   }
   function setVisible(visi) {
-    var x = document.getElementById("sfnav_shadow");
+    var x = document.getElementById("litnav_shadow");
     x.style.position = 'relative';
     x.style.visibility = visi;
   }
+  function setLabelVis(visi) {
+    var x = document.getElementById("litnav_labels");
+    x.style.visibility = visi;
+  }
+
   function isVisibleSearch() {
-    return document.getElementById("sfnav_quickSearch").style.visibility !== 'hidden';
+    return document.getElementById("litnav_quickSearch").style.visibility !== 'hidden';
   }
   function setVisibleSearch(visi)
   {
-    var t = document.getElementById("sfnav_search_box");
+    var t = document.getElementById("litnav_search_box");
     t.style.visibility = visi;
-    if (visi=='visible') document.getElementById("sfnav_quickSearch").focus();
+    if (visi=='visible') document.getElementById("litnav_quickSearch").focus();
+  }
+  function setVisibleLabel(visi) {
+    var t = document.getElementById("litnav_labels");
+    t.style.visibility = visi;
+    if (visi=='visible') document.getElementById("litnav_quickSearch").focus();
   }
 
   function lookAt() {
-    let newSearchVal = document.getElementById('sfnav_quickSearch').value
+    let newSearchVal = document.getElementById('litnav_quickSearch').value
     if (newSearchVal !== '') {
       addElements(newSearchVal);
     }
     else{
-      document.querySelector('#sfnav_output').innerHTML = '';
+      document.querySelector('#litnav_output').innerHTML = '';
       setVisible("hidden");
       posi = -1;
     }
@@ -344,7 +358,7 @@ var sfnav = (function() {
       sp.id = cmds[word].id;
     }
 
-    sp.classList.add('sfnav_child');
+    sp.classList.add('litnav_child');
     sp.appendChild(document.createTextNode(word));
     sp.onmouseover = mouseHandler;
     sp.onmouseout = mouseHandlerOut;
@@ -359,7 +373,7 @@ var sfnav = (function() {
   {
     clearOutput();
     var err = document.createElement("div");
-    err.className = 'sfnav_child sfnav-success-wrapper';
+    err.className = 'litnav_child litnav-success-wrapper';
     var errorText = '';
     err.appendChild(document.createTextNode('Success! '));
     err.appendChild(document.createElement('br'));
@@ -376,7 +390,7 @@ var sfnav = (function() {
   {
     clearOutput();
     var err = document.createElement("div");
-    err.className = 'sfnav_child sfnav-error-wrapper';
+    err.className = 'litnav_child litnav-error-wrapper';
 
     var errorText = '';
     err.appendChild(document.createTextNode('Error! '));
@@ -389,7 +403,7 @@ var sfnav = (function() {
 
     /*
        var ta = document.createElement('textarea');
-       ta.className = 'sfnav-error-textarea';
+       ta.className = 'litnav-error-textarea';
        ta.value = JSON.stringify(text, null, 4);
 
        err.appendChild(ta);
@@ -492,22 +506,63 @@ var sfnav = (function() {
       }
     if (cmd.toLowerCase() == 'refresh metadata')
       {
+        let searchBar = document.getElementById("litnav_quickSearch");
         if (location.origin.indexOf("visual.force") !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: Inside VisualForce, try from Setup';
+          // document.getElementById('sfnav_quickSearch').value = 'Refresh does not work in VisualForce, run from Setup';
           clearOutput();
+          setVisible("hidden");
+          chrome.runtime.sendMessage({action:'VisualForce Metadata', 'key': hash});
+
+          setTimeout(function() { 
+            chrome.runtime.sendMessage({
+              action:'Get Commands', 'key': hash},
+              function(response) {
+                cmds = response;
+              }
+            );
+            getCustomLabels();
+            searchBar.value = '';
+            setVisible("visible");
+            renderLabels();
+          }, 2000);
           return;
         }
         if (location.origin.indexOf('lightning.force') !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Refresh failed: Does not work in Lightning, try in Classic';
+          // document.getElementById('sfnav_quickSearch').value = 'Refresh does not work in Lightning, run in Classic Setup';
           clearOutput();
+          setVisible("hidden");
+          chrome.runtime.sendMessage({action:'Lightning Metadata', 'key': hash});
+
+          setTimeout(function() { 
+            chrome.runtime.sendMessage({
+              action:'Get Commands', 'key': hash},
+              function(response) {
+                cmds = response;
+              }
+            );
+            getCustomLabels();
+            searchBar.value = '';
+            setVisible("visible");
+            renderLabels();
+          }, 4000);
+
           return;
         }
+
         showLoadingIndicator();
         getAllObjectMetadata();
         setTimeout(function() {
           hideLoadingIndicator();
-        }, 30000)
+        }, 30000);
         return true;
+      }
+    if (cmd.toLowerCase() == 'clabels')
+      {
+        if (sort == null) {
+          sort = true;
+          sorttable.start();
+        }
+        setLabelVis('visible');
       }
     if (cmd.toLowerCase() == 'setup')
       {
@@ -517,15 +572,15 @@ var sfnav = (function() {
     if (cmd.toLowerCase().substring(0,3) == 'cf ')
       {
         if (location.origin.indexOf("visual.force") !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Creation failed: Inside VisualForce, try from Setup';
+          document.getElementById('litnav_quickSearch').value = 'Creation failed: Inside VisualForce, try from Setup';
           clearOutput();
           return;
         } else if (location.origin.indexOf('lightning.force') !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Creation failed: Does not work in Lightning, try in Classic';
+          document.getElementById('litnav_quickSearch').value = 'Creation failed: Does not work in Lightning, try in Classic';
           clearOutput();
           return;
         } else {
-          document.getElementById('sfnav_quickSearch').value = '';
+          document.getElementById('litnav_quickSearch').value = '';
         }
         createField(cmd);
         return true;
@@ -538,15 +593,15 @@ var sfnav = (function() {
     if (cmd.toLowerCase() == 'orglimits')
       {
         if (location.origin.indexOf("visual.force") !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Retrieval failed: Inside VisualForce, try from Setup';
+          document.getElementById('litnav_quickSearch').value = 'Retrieval failed: Inside VisualForce, try from Setup';
           clearOutput();
           return;
         } else if (location.origin.indexOf('lightning.force') !== -1) {
-          document.getElementById('sfnav_quickSearch').value = 'Retrieval failed: Does not work in Lightning, try in Classic';
+          document.getElementById('litnav_quickSearch').value = 'Retrieval failed: Does not work in Lightning, try in Classic';
           clearOutput();
           return;
         } else {
-          document.getElementById('sfnav_quickSearch').value = '';
+          document.getElementById('litnav_quickSearch').value = '';
         }
         getLimits();
         return true;
@@ -745,7 +800,9 @@ var sfnav = (function() {
   }
 
   function getLimits() {
-    sid = "Bearer " + getCookie('sid');
+    if (sid == null) {
+      sid = "Bearer " + getCookie('sid');
+    }
     var limitsUrl = getServerInstance() + '/services/data/v45.0/limits';
     var req = new XMLHttpRequest();
     req.open("GET", limitsUrl, true);
@@ -767,7 +824,7 @@ var sfnav = (function() {
 
   function addLimitInfo(limit, remaining, max) {
     var limitChild = document.createElement("div");
-    limitChild.className = 'sfnav_child';
+    limitChild.className = 'litnav_child';
 
     limitChild.appendChild(document.createTextNode(limit + ': ' + remaining + ' Remaining of ' + max + ' Max'));
     limitChild.appendChild(document.createElement('br'));
@@ -841,6 +898,7 @@ var sfnav = (function() {
     cmds['Refresh Metadata'] = {};
     cmds['Setup'] = {};
     cmds['OrgLimits'] = {};
+    cmds['clabels'] = {};
     var req = new XMLHttpRequest();
     req.open("GET", theurl, true);
     req.setRequestHeader("Authorization", sid);
@@ -863,6 +921,7 @@ var sfnav = (function() {
     getSysPropsLLCBIDef();
     getFlowsDef();
     getCustomLabels();
+    renderLabels();
   }
 
   function parseSetupTree(html)
@@ -1013,7 +1072,7 @@ var sfnav = (function() {
     var origText = '', newText = '';
     if (position <0) position = 0;
 
-    origText = document.getElementById("sfnav_quickSearch").value;
+    origText = document.getElementById("litnav_quickSearch").value;
     if (typeof outp.childNodes[position] != 'undefined')
       {
         newText = outp.childNodes[position].firstChild.nodeValue;
@@ -1032,7 +1091,7 @@ var sfnav = (function() {
 
   function selectMove(direction) {
 
-    let searchBar = document.getElementById('sfnav_quickSearch');
+    let searchBar = document.getElementById('litnav_quickSearch');
 
     var firstChild;
 
@@ -1052,8 +1111,8 @@ var sfnav = (function() {
       else
         firstChild = null;
       if (posi >=0) {
-        outp.childNodes[posi + (direction == 'down' ? -1 : 1) ].classList.remove('sfnav_selected');
-        outp.childNodes[posi].classList.add('sfnav_selected');
+        outp.childNodes[posi + (direction == 'down' ? -1 : 1) ].classList.remove('litnav_selected');
+        outp.childNodes[posi].classList.add('litnav_selected');
         outp.childNodes[posi].scrollIntoViewIfNeeded();
         textfield.value = firstChild;
         return false
@@ -1068,7 +1127,7 @@ var sfnav = (function() {
 
   function bindShortcut(shortcut) {
 
-    let searchBar = document.getElementById('sfnav_quickSearch');
+    let searchBar = document.getElementById('litnav_quickSearch');
 
     Mousetrap.bindGlobal(shortcut, function(e) {
       setVisibleSearch("visible");
@@ -1085,6 +1144,7 @@ var sfnav = (function() {
 
         setVisible("hidden");
         setVisibleSearch("hidden");
+        setVisibleLabel("hidden");
       }
     });
 
@@ -1118,37 +1178,65 @@ var sfnav = (function() {
 
   function showLoadingIndicator()
   {
-    document.getElementById('sfnav_loader').style.visibility = 'visible';
+    document.getElementById('litnav_loader').style.visibility = 'visible';
   }
   function hideLoadingIndicator()
   {
-    document.getElementById('sfnav_loader').style.visibility = 'hidden';
+    document.getElementById('litnav_loader').style.visibility = 'hidden';
   }
   function getCustomObjectsDef()
   {
-
-    ftClient.query('SELECT+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
-      function(success)
-      {
-        for (var i=0;i<success.records.length;i++)
-          {
-            customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
-            var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
-            cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-          }
-      },
-      function(error)
-      {
-        getCustomObjects();
-      });
+    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+DeveloperName,+NamespacePrefix,+ManageableState+FROM+CustomObject';
+    var req = new XMLHttpRequest();
+    req.open("GET", toolingUrl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.onload = function(response) {
+      parseObjectDefs(response.target.responseText);
+    }
+    req.send();
   }
+  function parseObjectDefs(_data) {
+      if (_data.length == 0) {
+        return;
+      }
+      var properties = JSON.parse(_data);
+      if (properties.nextRecordsUrl != undefined) {
+        var req = new XMLHttpRequest();
+        req.open("GET", properties.nextRecordsUrl, true);
+        req.setRequestHeader("Authorization", sid);
+        req.onload = function(response) {
+          parseObjectDefs(response.target.responseText);
+        }
+        req.send();
+      }
+      var action = {};
+      if (properties.records) {
+        properties.records.map( obj => {
+          if (obj.attributes != null) {
+            if (obj.ManageableState != 'unmanaged' || obj.NamespacePrefix == null) { 
+              propRecord = obj.DeveloperName, obj.NamespacePrefix, obj.Id;
+    
+              action = {
+                key: obj.DeveloperName,
+                keyPrefix: obj.Id,
+                url: serverInstance + '/' + obj.Id
+              }
+              var apiName = (obj.NamespacePrefix == null ? '' : obj.NamespacePrefix + '__') + obj.DeveloperName + '__c';
+              cmds['Setup > Custom Object > ' + apiName] = action;
+            }
+          }
+        });
+        store('Store Commands', cmds);
+      }
+  }
+
   function getApexClassesDef() {
     ftClient.query('SELECT+Id,+Name,+NamespacePrefix+FROM+ApexClass',
     function(success)
     {
       for (var i=0;i<success.records.length;i++)
         {
-          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].Name + '__c';
+          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].Name;
           cmds['Setup > Apex Class > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
         }
     },
@@ -1355,7 +1443,10 @@ var sfnav = (function() {
     }
   }
   function getCustomLabels() {
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value+FROM+ExternalString';
+    if (sid == null) {
+      sid = "Bearer " + getCookie('sid');
+    }
+    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value,+NamespacePrefix+FROM+ExternalString+ORDER+BY+NamespacePrefix,+Category';
     var req = new XMLHttpRequest();
     req.open("GET", toolingUrl, true);
     req.setRequestHeader("Authorization", sid);
@@ -1364,11 +1455,14 @@ var sfnav = (function() {
     }
     req.send();
   }
+
   function parseLabels(_data) {
     if (_data.length == 0) {
       return;
-    }
+    }   
     var properties = JSON.parse(_data);
+    labelData = labelData || [];
+    labelData.push(properties.records);
     if (properties.nextRecordsUrl != undefined) {
       var req = new XMLHttpRequest();
       req.open("GET", properties.nextRecordsUrl, true);
@@ -1378,23 +1472,222 @@ var sfnav = (function() {
       }
       req.send();
     }
-    var action = {};
-    if (properties.records) {
-      properties.records.map( obj => {
-        if (obj.attributes != null) {
-          propRecord = obj.DeveloperName, obj.Id;
 
-          action = {
-            key: obj.Name,
-            keyPrefix: obj.Id,
-            url: serverInstance + '/' + obj.Id
-          }
-          cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Name] = action;
-          cmds['Setup > CustomLabel > ' + obj.Category + ' > ' + obj.Value] = action;
+    store('Store Labels', labelData);
+  }
+
+  function renderLabels() {
+    chrome.runtime.sendMessage({
+      action:'Get Labels', 'key': hash},
+      function(response) {
+        labelData = response;
+        var properties = [];
+        for (var i = 0; i < labelData.length; i++) {
+          properties = properties.concat(labelData[i]);
         }
-      });
-      store('Store Commands', cmds);
+        if (properties) {
+        properties.map( obj => {
+          if (obj.attributes != null) {
+            propRecord = obj.DeveloperName, obj.Id;
+            var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : 'Empty Namespace';
+            var namespaceNode = document.getElementById('ltable-'+nameSpace);
+            if (namespaceNode == null) {
+              var node = document.createElement('div');
+              node.setAttribute('id', nameSpace);
+              node.setAttribute('class', 'litnav_labels_tabcontent');
+              var table = document.createElement('table');
+              table.setAttribute('id', 'ltable-' + nameSpace);
+              table.setAttribute('class', 'sortable');
+              var col1 = document.createElement('col');
+              col1.setAttribute('class', 'c1');
+              table.appendChild(col1);
+              var col2 = document.createElement('col');
+              col2.setAttribute('class', 'c2');
+              table.appendChild(col2);
+              var col3 = document.createElement('col');
+              col3.setAttribute('class', 'c3');
+              table.appendChild(col3);
+              var col4 = document.createElement('col');
+              col4.setAttribute('class', 'c4');
+              table.appendChild(col4);
+              var col5 = document.createElement('col');
+              col5.setAttribute('class', 'c5');
+              table.appendChild(col5);
+              var thead = document.createElement('thead');
+              thead.setAttribute('class', 'sortableColumns');
+              var headerRow = document.createElement('tr');
+              headerRow.setAttribute('id', 'header');
+              headerRow.setAttribute('class', 'litnav_row_header');
+              headerRow.style.backgroundColor = '#ffffff';
+
+              var headerCat = document.createElement('th');
+              headerCat.innerHTML = 'Category';
+              headerRow.appendChild(headerCat);
+              
+              var headerName = document.createElement('th');
+              headerName.innerHTML = 'Name';
+              headerRow.appendChild(headerName);
+              
+              var headerValue = document.createElement('th');
+              headerValue.innerHTML = 'Value';
+              headerRow.appendChild(headerValue);
+
+              var headerRecord = document.createElement('th');
+              headerRecord.innerHTML = ' ';
+              headerRow.appendChild(headerRecord);
+
+              var headerTranslate = document.createElement('th');
+              headerTranslate.innerHTML = ' ';
+              headerRow.appendChild(headerTranslate);
+
+              thead.appendChild(headerRow);
+              table.appendChild(thead);
+              var tbody = document.createElement('tbody');
+              tbody.setAttribute('id', 'lbody-' + nameSpace);
+              table.appendChild(tbody);
+              node.appendChild(table);
+
+              tabHolder = document.getElementById('tabHolder');
+              tabHolder.appendChild(node);
+
+              var button = document.createElement('button');
+              button.setAttribute('class','tablinks');
+              button.addEventListener('click', openTab);
+              button.tabName = nameSpace;
+              button.innerHTML = nameSpace;
+
+              var tabClass = document.getElementsByClassName('litnav_labels_tab');
+              tabClass[0].appendChild(button);
+            }
+
+            var row = document.createElement('tr');
+            row.setAttribute('class', 'litnav_row');
+
+            var catCell = document.createElement('td');
+            catCell.innerHTML = (obj.Category != null) ? obj.Category : '(null)';
+            catCell.setAttribute('class', 'data');
+            row.appendChild(catCell);
+            
+            var nameCell = document.createElement('td');
+            nameCell.innerHTML = obj.Name;
+            nameCell.setAttribute('class', 'data');
+            row.appendChild(nameCell);
+            
+            var valueCell = document.createElement('td');
+            valueCell.innerHTML = obj.Value;
+            valueCell.setAttribute('class', 'data');
+            row.appendChild(valueCell);
+
+            var idCell = document.createElement('td');
+            idCell.innerHTML = '<a class="litnav_labels" href="' + serverInstance + '/' + obj.Id + '">Record</a>';
+            row.appendChild(idCell);
+
+            var translateCell = document.createElement('td');
+            translateCell.innerHTML = '<a class="litnav_labels" href="' + serverInstance + '/01j/e?parentNmsp=' + nameSpace + '&retURL=%2F' + obj.Id + '&Parent=' + obj.Id + '">Translate</a>';
+            row.appendChild(translateCell);
+
+            var bodyString = 'lbody-' + nameSpace;
+
+            var labelBody = document.getElementById(bodyString);
+            var allTable = document.getElementById('lbody-All Namespaces')
+            labelBody.appendChild(row);
+            allTable.appendChild(row.cloneNode(true));
+          }
+        });
+        // Add button for Export at the end of the process
+        if (document.getElementsByClassName('litnav_export').length == 0 ) {
+          var button = document.createElement('button');
+          button.setAttribute('class','litnav_export');
+          button.addEventListener('click', downloadLabels);
+          button.innerHTML = 'Export To CSV';
+          var tabClass = document.getElementsByClassName('litnav_labels_tab');
+          tabClass[0].appendChild(button);
+        }
+      }
+    });
+  }
+
+  function openTab(evt) {
+    var tabName = evt.target.tabName;
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName('litnav_labels_tabcontent');
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = 'none';
     }
+    tablinks = document.getElementsByClassName('tablinks');
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(' active', '');
+    }
+    document.getElementById(tabName).style.display = 'block';
+    evt.currentTarget.className += ' active';
+  }
+
+  function filterLabels(value) {
+    var cells = document.getElementsByClassName('data');
+    var rows = document.getElementById('tabHolder').getElementsByTagName('tr');
+    var filteredRows = [];
+    if (value != '') {
+      for (i = 0; i < cells.length; i++) {
+        if (cells[i].innerHTML.toLowerCase().includes(value.toLowerCase()) || cells[i].parentNode.parentNode.tagName.toLowerCase() == 'thead') {
+          filteredRows.push(cells[i].parentNode);
+        }
+      }
+
+      for (i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+      }
+
+      for (i = 0; i < filteredRows.length; i++) {
+        filteredRows[i].style.display = '';
+      }
+    } else {
+      for (i = 0; i < rows.length; i++) {
+        rows[i].style.display = '';
+      }
+    }
+
+    var headers = document.getElementsByClassName('litnav_row_header');
+    for (i = 0; i < headers.length; i++) {
+      headers[i].style.display = '';
+    }
+  }
+
+  function downloadLabels() {
+    var tablinks = document.getElementsByClassName('litnav_labels_tabcontent');
+    var table_id;
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].style.display == 'block') {
+        table_id = tablinks[i].id;
+      }
+    }
+
+    var rows = document.getElementById('ltable-' + table_id).querySelectorAll('tr');
+    var csv = [];
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].style.display != 'none') {  
+        var row = [], cols = rows[i].querySelectorAll('td, th');
+        for (var j = 0; j < 3; j++) {
+          var data = cols[j].innerText.replace(/"/g, '""');
+          row.push('"' + data + '"');
+        }
+        csv.push(row.join(';'));
+      }
+    }
+
+    // Have to blob it, else large files won't DL properly
+    var csv_string = csv.join('\n');
+    var csvData = new Blob([csv_string], { type: 'text/csv' });
+    var csvURL = URL.createObjectURL(csvData);
+
+    var filename = 'export_' + table_id.replace(' ', '_') + '_' + new Date().toLocaleDateString() + '.csv';
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    link.setAttribute('target', '_blank');
+    link.setAttribute('href', csvURL);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   function init()
@@ -1403,20 +1696,64 @@ var sfnav = (function() {
     ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
 
     var div = document.createElement('div');
-    div.setAttribute('id', 'sfnav_search_box');
+    div.setAttribute('id', 'litnav_search_box');
     var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
     var logoURL = chrome.extension.getURL("images/ncino_128.png");
     div.innerHTML = `
-    <div class="sfnav_wrapper">
-      <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
-      <img id="sfnav_loader" src= "${loaderURL}"/>
-      <img id="sfnav_logo" src= "${logoURL}"/>
+    <div class="litnav_wrapper">
+      <input type="text" id="litnav_quickSearch" autocomplete="off"/>
+      <img id="litnav_loader" src= "${loaderURL}"/>
+      <img id="litnav_logo" src= "${logoURL}"/>
     </div>
-    <div class="sfnav_shadow" id="sfnav_shadow"/>
-    <div class="sfnav_output" id="sfnav_output"/>`;
+    <div class="litnav_shadow" id="litnav_shadow"/>
+    <div class="litnav_output" id="litnav_output"/>`;
 
     document.body.appendChild(div);
-    outp = document.getElementById("sfnav_output");
+
+    var labelDiv = document.createElement('div');
+    labelDiv.setAttribute('id', 'litnav_labels');
+    labelDiv.innerHTML = `
+      <div class="litnav_labels_tab">
+        <div class="litnav_filter">
+          <input id="litnav_filter_input" class="litnav_filter_input" value="Filter">
+        </div>
+        <button id="all_button" class="tablinks">All Namespaces</button>
+      </div>
+      <div id="tabHolder">
+        <div id="All Namespaces" class="litnav_labels_tabcontent">
+          <table id="ltable-All Namespaces" border="0" cellpadding="0" cellspacing="0" class="sortable">
+            <col class="c1">
+            <col class="c2">
+            <col class="c3">
+            <col class="c4">
+            <col class="c5">
+            <thead class="sortableColumns">
+              <tr id="header" class="litnav_row_header" style="background-color: rgb(255, 255, 255);">
+                <th>Category</th>
+                <th>Name</th>
+                <th>Value</th>
+                <th>Record</th>
+                <th>Translation</th>
+              </tr>
+            </thead>
+            <tbody id="lbody-All Namespaces">
+            </tbody>
+            <tfoot>
+            </tfoot>
+          </table>
+        </div>
+      </div>`;
+    document.body.appendChild(labelDiv);
+    var filterInput = document.getElementById('litnav_filter_input');
+    filterInput.onchange = function() {
+      filterLabels(filterInput.value);
+    }
+    var button = document.getElementById('all_button');
+    button.addEventListener('click', openTab);
+    button.tabName = 'All Namespaces';
+
+    outp = document.getElementById("litnav_output");
+    labelp = document.getElementById("litnav_labels");
     hideLoadingIndicator();
     initShortcuts();
 
@@ -1425,6 +1762,7 @@ var sfnav = (function() {
     clientId = omnomnom.split('!')[0];
 
     hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
+    
     // chrome.storage.local.get(['Commands','Metadata'], function(results) {
     //     console.log(results);
     // });
@@ -1438,8 +1776,9 @@ var sfnav = (function() {
           metaData = {};
           getAllObjectMetadata();
         } else {
-          // ???
+          /// ???
         }
+
       });
 
     // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},

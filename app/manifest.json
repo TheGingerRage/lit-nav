@@ -1,6 +1,6 @@
 {
     "name": "Lightning Navigator",
-    "version": "0.2.3",
+    "version": "0.3.0",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
@@ -35,7 +35,8 @@
                 "scripts/mousetrap.min.js",
                 "scripts/forceTooling.js",
                 "scripts/main.js",
-                "scripts/popup.js"
+                "scripts/popup.js",
+                "scripts/sorttable.js"
             ],
             "run_at": "document_end"
         }
@@ -44,6 +45,7 @@
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
         "https://*.cloudforce.com/*",
-        "storage"
+        "storage",
+        "tabs"
     ]
 }
