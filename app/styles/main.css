@@ -123,6 +123,21 @@
   cursor: pointer;
   outline:0 !important;
 }
+.litnav_labels_tab button.litnav_export {
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: .75rem;
+  background: none;
+  padding: .4em .6em;
+  color: #45d;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  border-radius: 0;
+  cursor: pointer;
+  outline:0 !important;
+}
+
 .litnav_labels_tab button.active {
   background: #cccccc;
   color: #000000;
@@ -146,15 +161,16 @@
   outline: none;
  	background-color:white;
 }
-table {
+table.sortable {
   width: 100%;
   table-layout: fixed;
   font-family: Helvetica, Arial, sans-serif;
-  font-size: .9rem;
+  font-size: .85rem;
   border-collapse: separate;
-  border-spacing: 0px 2px;
+  border-spacing: 2px 2px;
+  word-break: break-word;
 }
-thead {
+thead.sortableColumns {
   cursor: pointer;
 }
 tr.litnav_row {
@@ -167,11 +183,17 @@ tr.litnav_row {
   width: 31%;
 }
 .c3 {
-  width: 40%;
+  width: 37%;
 }
 .c4 {
   width: 5%;
 }
 .c5 {
-  width: 5%;
+  width: 8%;
+}
+a.litnav_labels {
+  color: #000;
+}
+a.litnav_labels:hover {
+  color: #555;
 }
