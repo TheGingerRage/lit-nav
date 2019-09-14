@@ -2,7 +2,6 @@ var commands = {};
 var metadata = {};
 var lastUpdated = {};
 var labels = {};
-let tab = null;
 
 const excludedDomains = ['visual.force.com', 'content.force.com', 'lightning.force.com'];
 
