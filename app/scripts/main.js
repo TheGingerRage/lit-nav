@@ -3,7 +3,7 @@
 // @copyright 2018+ Bryan Mitchell / nCino
 // http://ncino.com
 
-chrome.runtime.sendMessage({ action: 'Loaded' });
+chrome.runtime.sendMessage({ action: 'Fetch Cookie' });
 
 var litnav = (function() {
   var cookie;
@@ -887,21 +887,13 @@ var litnav = (function() {
   }
 
   function store(action, payload) {
+    const req = {
+      action,
+      payload,
+      key: hash
+    };
 
-    var req = {}
-    req.action = action;
-    req.key = hash;
-    req.payload = payload;
-
-    chrome.runtime.sendMessage(req, function(response) {
-
-    });
-
-    // var storagePayload = {};
-    // storagePayload[action] = payload;
-    // chrome.storage.local.set(storagePayload, function() {
-    //     console.log('stored');
-    // });
+    chrome.runtime.sendMessage(req);
   }
 
   function getAllObjectMetadata() {
@@ -1772,18 +1764,18 @@ var litnav = (function() {
     // });
 
     chrome.runtime.sendMessage({
-      action:'Get Commands', 'key': hash},
-      function(response) {
+      action: 'Get Commands', 
+      'key': hash 
+    },
+    response => {
+      if (!response || response.length === 0) {
+        cmds = {};
+        metaData = {};
+        getAllObjectMetadata();
+      } else {
         cmds = response;
-        if (cmds == null || cmds.length == 0) {
-          cmds = {};
-          metaData = {};
-          getAllObjectMetadata();
-        } else {
-          /// ???
-        }
-
-      });
+      }
+    });
 
     // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},
     //   function(response) {
