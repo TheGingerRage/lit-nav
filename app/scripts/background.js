@@ -11,15 +11,10 @@ const getFilteredCookies = (allCookies, filter) => {
     );
 };
 
-chrome.browserAction.onClicked.addListener(function() {
-    chrome.browserAction.setPopup({ popup: 'popup.html' });
-});
-
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var orgKey = request.key != null ? request.key.split('!')[0] : null;
 
     if (request.action === 'Loaded') {
-        tab = sender.tab;
         const orgDomain = sender.tab.url.replace(/https?:\/\/(.*\.com).*/, '$1');
         const parts = orgDomain.split('.');
 
