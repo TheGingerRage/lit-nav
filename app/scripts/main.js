@@ -3,7 +3,20 @@
 // @copyright 2018+ Bryan Mitchell / nCino
 // http://ncino.com
 
+chrome.runtime.sendMessage({ action: 'Loaded' });
+
 var litnav = (function() {
+  var cookie;
+
+  chrome.runtime.onMessage.addListener(
+    request => {
+      if(request.cookie) {
+        cookie = request.cookie;
+        init();
+      }
+    }
+  )
+
   var outp;
   var labelp;
   var tabHolder;
@@ -999,20 +1012,11 @@ var litnav = (function() {
     store('Store Commands', cmds);
   }
 
-  function getCookie(c_name)
+  function getCookie()
   {
-    var i,x,y,ARRcookies=document.cookie.split(";");
-    for (i=0;i<ARRcookies.length;i++)
-      {
-        x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-        y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-        x=x.replace(/^\s+|\s+$/g,"");
-        if (x==c_name)
-          {
-            return unescape(y);
-          }
-      }
+    return cookie;
   }
+
   function getServerInstance()
   {
     var url = location.origin + "";
@@ -1787,8 +1791,4 @@ var litnav = (function() {
     // });
 
   }
-
-  if (serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
-  else init();
-
 })();
