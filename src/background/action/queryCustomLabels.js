@@ -1,4 +1,4 @@
-import { query, actionType } from '../../common/constants';
+import { query } from '../../common/constants';
 
 export const queryCustomLabels = (request, sender, sendResponse, data) => {
   const { key, cookie } = request;
@@ -11,15 +11,23 @@ export const queryCustomLabels = (request, sender, sendResponse, data) => {
   fetchCustomLabels(url, headers, domain, key, sender.tab);
 };
 
+const storeLabels = (key, payload) => {
+  let labels = localStorage.getItem(`labels:${key}`);
+
+  if (labels) {
+    labels = JSON.parse(labels);
+  } else {
+    labels = [];
+  }
+
+  localStorage.setItem(`labels:${key}`, JSON.stringify([...labels, ...payload]));
+};
+
 const fetchCustomLabels = (url, headers, domain, key, tab) => {
   fetch(url, { headers })
     .then(response => response.json())
     .then(response => {
-      chrome.tabs.sendMessage(tab.id, {
-        key,
-        action: actionType.STORE_LABELS,
-        payload: response.records
-      });
+      storeLabels(key, response.records);
 
       if (response.nextRecordsUrl) {
         fetchCustomLabels(

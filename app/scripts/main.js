@@ -5,7 +5,6 @@
 
 chrome.runtime.sendMessage({ action: 'Fetch Cookie' });
 
-
 var litnav = (function() {
   var cookie;
   var serverInstance;
@@ -26,10 +25,6 @@ var litnav = (function() {
 
       if(request.action === 'Render Labels') {
         renderLabels();
-      }
-
-      if(request.action === 'Store Labels') {
-        chrome.runtime.sendMessage(request);
       }
     }
   )

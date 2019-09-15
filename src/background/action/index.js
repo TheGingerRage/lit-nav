@@ -4,7 +4,6 @@ import { getCommands } from './getCommands';
 import { getSettings } from './getSettings';
 import { setSettings } from './setSettings';
 import { getMetadata } from './getMetadata';
-import { storeLabels } from './storeLabels';
 import { getLabels } from './getLabels';
 import { lightningMetadata } from './lightningMetadata';
 import { visualForceMetadata } from './visualForceMetadata';
@@ -19,7 +18,6 @@ export const actions = {
   [actionType.SET_SETTINGS]: setSettings,
   [actionType.GET_METADATA]: getMetadata,
   [actionType.QUERY_LABELS]: queryCustomLabels,
-  [actionType.STORE_LABELS]: storeLabels,
   [actionType.GET_LABELS]: getLabels,
   [actionType.LIGHTNING_METADATA]: lightningMetadata,
   [actionType.VISUALFORCE_METADATA]: visualForceMetadata
