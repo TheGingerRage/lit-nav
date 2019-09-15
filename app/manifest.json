@@ -4,27 +4,21 @@
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
-        "default_icon": "images/ncino_38.png"
+        "default_icon": "images/ncino_38.png",
+        "default_popup": "popup.html"
     },
     "background": {
-        "scripts": [
-            "scripts/background.js"
-        ],
+        "scripts": ["scripts/background.js"],
         "persistent": true
     },
     "icons": {
         "128": "images/128.png"
     },
-    "web_accessible_resources": [
-        "images/ajax-loader.gif",
-        "images/ncino_128.png"
-    ],
+    "web_accessible_resources": ["images/ajax-loader.gif", "images/ncino_128.png"],
     "description": "",
     "content_scripts": [
         {
-            "css": [
-                "styles/main.css"
-            ],
+            "css": ["styles/main.css"],
             "matches": [
                 "https://*.force.com/*",
                 "https://*.salesforce.com/*",
@@ -35,7 +29,6 @@
                 "scripts/mousetrap.min.js",
                 "scripts/forceTooling.js",
                 "scripts/main.js",
-                "scripts/popup.js",
                 "scripts/sorttable.js"
             ],
             "run_at": "document_end"
@@ -46,6 +39,7 @@
         "https://*.salesforce.com/*",
         "https://*.cloudforce.com/*",
         "storage",
-        "tabs"
+        "tabs",
+        "cookies"
     ]
 }
