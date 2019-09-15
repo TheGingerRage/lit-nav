@@ -1,11 +1,8 @@
 export const getLabels = (request, sender, sendResponse, data) => {
-  const { labels, orgKey } = data;
-  const { key } = request;
+  let labels = localStorage.getItem(`labels:${request.key}`);
 
-  if (labels[key]) {
-    sendResponse(labels[key]);
-  } else if (labels[orgKey]) {
-    sendResponse(labels[orgKey]);
+  if (labels) {
+    sendResponse(JSON.parse(labels));
   } else {
     sendResponse();
   }

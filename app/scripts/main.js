@@ -5,14 +5,31 @@
 
 chrome.runtime.sendMessage({ action: 'Fetch Cookie' });
 
+
 var litnav = (function() {
   var cookie;
+  var serverInstance;
+  var clientId, omnomnom, hash;
 
   chrome.runtime.onMessage.addListener(
     request => {
       if(request.cookie) {
         cookie = request.cookie;
+        omnomnom = cookie.value;
+        clientId = omnomnom.split('!')[0];
+        hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
+        serverInstance = `https://${cookie.domain}`;
+        chrome.runtime.sendMessage({ action: 'Query Labels', cookie: request.cookie, key: hash });
+
         init();
+      }
+
+      if(request.action === 'Render Labels') {
+        renderLabels();
+      }
+
+      if(request.action === 'Store Labels') {
+        chrome.runtime.sendMessage(request);
       }
     }
   )
@@ -30,10 +47,9 @@ var litnav = (function() {
   var input;
   var key;
   var metaData = {};
-  var serverInstance = getServerInstance();
   var cmds = {};
   var isCtrl = false;
-  var clientId, omnomnom, hash;
+
   var loaded=false;
   var shortcut;
   var sid;
@@ -533,10 +549,10 @@ var litnav = (function() {
                 cmds = response;
               }
             );
-            getCustomLabels();
+            
+            chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
             searchBar.value = '';
             setVisible("visible");
-            renderLabels();
           }, 2000);
           return;
         }
@@ -553,15 +569,16 @@ var litnav = (function() {
                 cmds = response;
               }
             );
-            getCustomLabels();
+            
+            chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
             searchBar.value = '';
             setVisible("visible");
-            renderLabels();
           }, 4000);
 
           return;
         }
 
+        chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
         showLoadingIndicator();
         getAllObjectMetadata();
         setTimeout(function() {
@@ -925,8 +942,6 @@ var litnav = (function() {
     getSysPropsNFORCEDef();
     getSysPropsLLCBIDef();
     getFlowsDef();
-    getCustomLabels();
-    renderLabels();
   }
 
   function parseSetupTree(html)
@@ -1006,41 +1021,15 @@ var litnav = (function() {
 
   function getCookie()
   {
-    return cookie;
+    return cookie.value;
   }
 
   function getServerInstance()
   {
-    var url = location.origin + "";
-    var urlParseArray = url.split(".");
-    var i;
-    var returnUrl;
-
-    if (url.indexOf("salesforce") != -1)
-      {
-        returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
-        return returnUrl;
-      }
-    if (url.indexOf("lightning.force") != -1)
-      {
-        returnUrl = url;
-        return returnUrl;
-      }
-    if (url.indexOf("cloudforce") != -1)
-      {
-        returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
-        return returnUrl;
-      }
-    if (url.indexOf("visual.force") != -1)
-      {
-        returnUrl = 'https://' + urlParseArray[1] + '';
-        return returnUrl;
-      }
-    return returnUrl;
+    return`https://${cookie.domain}`;
   }
 
   function initShortcuts() {
-
     chrome.runtime.sendMessage({'action':'Get Settings'},
       function(response) {
         if (response !== undefined) {
@@ -1049,18 +1038,6 @@ var litnav = (function() {
         }
       }
     );
-
-    // chrome.storage.local.get('settings', function(results) {
-    //     if (typeof results.settings.shortcut === 'undefined')
-    //     {
-    //         shortcut = 'shift+space';
-    //         bindShortcut(shortcut);
-    //     }
-    //     else
-    //     {
-    //         bindShortcut(results.settings.shortcut);
-    //     }
-    // });
   }
 
   function kbdCommand(e, key) {
@@ -1438,39 +1415,6 @@ var litnav = (function() {
       store('Store Commands', cmds);
     }
   }
-  function getCustomLabels() {
-    if (sid == null) {
-      sid = "Bearer " + getCookie('sid');
-    }
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value,+NamespacePrefix+FROM+ExternalString+ORDER+BY+NamespacePrefix,+Category';
-    var req = new XMLHttpRequest();
-    req.open("GET", toolingUrl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseLabels(response.target.responseText);
-    }
-    req.send();
-  }
-
-  function parseLabels(_data) {
-    if (_data.length == 0) {
-      return;
-    }   
-    var properties = JSON.parse(_data);
-    labelData = labelData || [];
-    labelData.push(properties.records);
-    if (properties.nextRecordsUrl != undefined) {
-      var req = new XMLHttpRequest();
-      req.open("GET", properties.nextRecordsUrl, true);
-      req.setRequestHeader("Authorization", sid);
-      req.onload = function(response) {
-        parseLabels(response.target.responseText);
-      }
-      req.send();
-    }
-
-    store('Store Labels', labelData);
-  }
 
   function renderLabels() {
     chrome.runtime.sendMessage({
@@ -1752,16 +1696,6 @@ var litnav = (function() {
     labelp = document.getElementById("litnav_labels");
     hideLoadingIndicator();
     initShortcuts();
-
-    omnomnom = getCookie('sid');
-
-    clientId = omnomnom.split('!')[0];
-
-    hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
-    
-    // chrome.storage.local.get(['Commands','Metadata'], function(results) {
-    //     console.log(results);
-    // });
 
     chrome.runtime.sendMessage({
       action: 'Get Commands', 

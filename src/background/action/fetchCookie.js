@@ -22,7 +22,7 @@ export const fetchCookie = (request, sender, sendResponse, data) => {
       }
 
       if (possibleCookies.length > 0) {
-        chrome.tabs.sendMessage(sender.tab.id, { cookie: possibleCookies[0].value });
+        chrome.tabs.sendMessage(sender.tab.id, { cookie: possibleCookies[0] });
       }
     });
   }

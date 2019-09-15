@@ -7,8 +7,22 @@ export const actionType = {
   SET_SETTINGS: 'Set Settings',
   STORE_METADATA: 'Store Metadata',
   GET_METADATA: 'Get Metadata',
+  QUERY_LABELS: 'Query Labels',
   STORE_LABELS: 'Store Labels',
   GET_LABELS: 'Get Labels',
   LIGHTNING_METADATA: 'Lightning Metadata',
   VISUALFORCE_METADATA: 'VisualForce Metadata'
+};
+export const query = {
+  CustomLabels: `
+    SELECT 
+      Id,
+      Name,
+      Category,
+      Value,
+      NamespacePrefix
+    FROM
+      ExternalString
+    ORDER BY NamespacePrefix,Category
+  `
 };

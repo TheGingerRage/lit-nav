@@ -1,12 +1,12 @@
 export const storeLabels = (request, sender, sendResponse, data) => {
-  const { labels, orgKey } = data;
   const { key, payload } = request;
+  let labels = localStorage.getItem(`labels:${key}`);
 
-  Object.keys(labels).forEach(k => {
-    if (k !== key && k.split('!')[0] === orgKey) {
-      delete labels[k];
-    }
-  });
+  if (labels) {
+    labels = JSON.parse(labels);
+  } else {
+    labels = [];
+  }
 
-  labels[key] = labels[orgKey] = payload;
+  localStorage.setItem(`labels:${key}`, JSON.stringify([...labels, ...payload]));
 };
