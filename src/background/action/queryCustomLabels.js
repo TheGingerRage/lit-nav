@@ -15,7 +15,7 @@ const fetchCustomLabels = (url, headers, domain, key, tab) => {
   fetch(url, { headers })
     .then(response => response.json())
     .then(response => {
-      labels.push(response.records);
+      labels.push(...response.records);
 
       if (response.nextRecordsUrl) {
         fetchCustomLabels(

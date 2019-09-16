@@ -1412,13 +1412,8 @@ var litnav = (function() {
   }
 
   function renderLabels(labels) {
-        labelData = labels;
-        var properties = [];
-        for (var i = 0; i < labelData.length; i++) {
-          properties = properties.concat(labelData[i]);
-        }
-        if (properties) {
-        properties.map( obj => {
+        if (labels.length > 0) {
+        labels.forEach( obj => {
           if (obj.attributes != null) {
             propRecord = obj.DeveloperName, obj.Id;
             var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : 'Empty Namespace';
