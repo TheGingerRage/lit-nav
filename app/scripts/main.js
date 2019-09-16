@@ -24,7 +24,7 @@ var litnav = (function() {
       }
 
       if(request.action === 'Render Labels') {
-        renderLabels();
+        renderLabels(request.labels);
       }
     }
   )
@@ -1411,11 +1411,8 @@ var litnav = (function() {
     }
   }
 
-  function renderLabels() {
-    chrome.runtime.sendMessage({
-      action:'Get Labels', 'key': hash},
-      function(response) {
-        labelData = response;
+  function renderLabels(labels) {
+        labelData = labels;
         var properties = [];
         for (var i = 0; i < labelData.length; i++) {
           properties = properties.concat(labelData[i]);
@@ -1539,7 +1536,6 @@ var litnav = (function() {
           tabClass[0].appendChild(button);
         }
       }
-    });
   }
 
   function openTab(evt) {
