@@ -1,9 +1,18 @@
-export const getLabels = (request, sender, sendResponse, data) => {
-  let labels = localStorage.getItem(`labels:${request.key}`);
+import { queryCustomLabels } from './queryCustomLabels';
 
-  if (labels) {
-    sendResponse(JSON.parse(labels));
+export const getLabels = (request, sender, sendResponse, data) => {
+  const { labels, orgKey, lastUpdated } = data;
+  const { key } = request;
+
+  if (labels[key]) {
+    sendResponse({ labels: labels[key] });
+  } else if (
+    labels[orgKey] &&
+    lastUpdated[orgKey] &&
+    new Date().getTime() - lastUpdated[orgKey].getTime() < 1000 * 60 * 60
+  ) {
+    sendResponse({ labels: labels[orgKey] });
   } else {
-    sendResponse();
+    queryCustomLabels(request, sender, sendResponse, data);
   }
 };

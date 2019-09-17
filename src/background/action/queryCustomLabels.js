@@ -8,25 +8,41 @@ export const queryCustomLabels = (request, sender, sendResponse, data) => {
   const url = `https://${domain}/services/data/v43.0/tooling/query/?q=${query.CustomLabels}`;
   const headers = { Authorization: `Bearer ${value}` };
 
-  fetchCustomLabels(url, headers, domain, key, sender.tab);
+  labels = [];
+
+  fetchCustomLabels(url, headers, domain, key, sender.tab, data);
 };
 
-const fetchCustomLabels = (url, headers, domain, key, tab) => {
+const fetchCustomLabels = (url, headers, domain, key, tab, data) => {
   fetch(url, { headers })
     .then(response => response.json())
     .then(response => {
-      labels.push(...response.records);
+      if (response && response.records && response.records.length > 0) {
+        labels.push(...response.records);
 
-      if (response.nextRecordsUrl) {
-        fetchCustomLabels(
-          `https://${domain}/${response.nextRecordsUrl}`,
-          headers,
-          domain,
-          key,
-          tab
-        );
-      } else {
-        chrome.tabs.sendMessage(tab.id, { action: 'Render Labels', labels });
+        if (response.nextRecordsUrl) {
+          fetchCustomLabels(
+            `https://${domain}/${response.nextRecordsUrl}`,
+            headers,
+            domain,
+            key,
+            tab,
+            data
+          );
+        } else {
+          const { orgKey, lastUpdated } = data;
+
+          Object.keys(data.labels).forEach(k => {
+            if (k !== key && k.split('!')[0] === orgKey) {
+              delete data.labels[k];
+            }
+          });
+
+          data.labels[key] = data.labels[orgKey] = [...labels];
+          lastUpdated[orgKey] = new Date();
+
+          chrome.tabs.sendMessage(tab.id, { action: 'Render Labels', labels });
+        }
       }
     });
 };

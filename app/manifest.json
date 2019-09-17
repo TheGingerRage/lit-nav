@@ -22,7 +22,8 @@
       "matches": [
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
-        "https://*.cloudforce.com/*"
+        "https://*.cloudforce.com/*",
+        "https://*.visualforce.com/*"
       ],
       "js": [
         "scripts/jquery.js",

@@ -18,7 +18,11 @@ var litnav = (function() {
         clientId = omnomnom.split('!')[0];
         hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
         serverInstance = `https://${cookie.domain}`;
-        chrome.runtime.sendMessage({ action: 'Query Labels', cookie: request.cookie, key: hash });
+        chrome.runtime.sendMessage({ action: 'Get Labels', cookie: request.cookie, key: hash }, response => {
+          if(response && response.labels) {
+            renderLabels(response.labels);
+          }
+        });
 
         init();
       }
@@ -941,40 +945,42 @@ var litnav = (function() {
 
   function parseSetupTree(html)
   {
-    var textLeafSelector = '.setupLeaf > a[id*="_font"]';
-    var all = html.querySelectorAll(textLeafSelector);
-    var strName;
-    var as;
-    var strNameMain;
-    var strName;
-    [].map.call(all, function(item) {
-      var hasTopParent = false, hasParent = false;
-      var parent, topParent;
-      var parentEl, topParentEl;
+    if(html && html.querySelectorAll) {
+      var textLeafSelector = '.setupLeaf > a[id*="_font"]';
+      var all = html.querySelectorAll(textLeafSelector);
+      var strName;
+      var as;
+      var strNameMain;
+      var strName;
+      [].map.call(all, function(item) {
+        var hasTopParent = false, hasParent = false;
+        var parent, topParent;
+        var parentEl, topParentEl;
 
-      if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
-          && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
+        if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
+            && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
 
-        hasParent = true;
-        parentEl = item.parentElement.parentElement.parentElement;
-        parent = parentEl.querySelector('.setupFolder').innerText;
-      }
-      if (hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
-         && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
-        hasTopParent = true;
-        topParentEl = parentEl.parentElement.parentElement;
-        topParent = topParentEl.querySelector('.setupFolder').innerText;
-      }
+          hasParent = true;
+          parentEl = item.parentElement.parentElement.parentElement;
+          parent = parentEl.querySelector('.setupFolder').innerText;
+        }
+        if (hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
+          && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
+          hasTopParent = true;
+          topParentEl = parentEl.parentElement.parentElement;
+          topParent = topParentEl.querySelector('.setupFolder').innerText;
+        }
 
-      strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
-      strNameMain += (hasParent ? (parent + ' > ') : '');
+        strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
+        strNameMain += (hasParent ? (parent + ' > ') : '');
 
-      strName = strNameMain + item.innerText;
+        strName = strNameMain + item.innerText;
 
-      if (cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
+        if (cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
 
-    });
-    store('Store Commands', cmds);
+      });
+      store('Store Commands', cmds);
+    }
   }
 
   function getSetupTree() {
