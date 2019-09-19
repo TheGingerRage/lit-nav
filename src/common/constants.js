@@ -10,7 +10,9 @@ export const actionType = {
   QUERY_LABELS: 'Query Labels',
   GET_LABELS: 'Get Labels',
   LIGHTNING_METADATA: 'Lightning Metadata',
-  VISUALFORCE_METADATA: 'VisualForce Metadata'
+  VISUALFORCE_METADATA: 'VisualForce Metadata',
+  REFRESH_METADATA: 'Refresh Metadata',
+  REFRESH_METADATA_SUCCESS: 'Refresh Metadata Success'
 };
 export const query = {
   CustomLabels: `
@@ -22,6 +24,29 @@ export const query = {
       NamespacePrefix
     FROM
       ExternalString
-    ORDER BY NamespacePrefix,Category
-  `
+    ORDER BY NamespacePrefix,Category`,
+  CustomObjectDef: `
+    SELECT
+      Id,
+      DeveloperName,
+      NamespacePrefix,
+      ManageableState
+    FROM
+      CustomObject`,
+  ApexClasses: `
+    SELECT 
+      Id,
+      Name,
+      NamespacePrefix
+    FROM
+      ApexClass`
+};
+export const SF_API_VERSION = 'v46.0';
+export const toolingUrl = `services/data/${SF_API_VERSION}/tooling`;
+export const urlSuffix = {
+  Setup: 'ui/setup/Setup',
+  CustomLabels: `${toolingUrl}/query/?q=${query.CustomLabels}`,
+  CustomObjectDef: `${toolingUrl}/query/?q=${query.CustomObjectDef}`,
+  ApexClasses: `${toolingUrl}/query?q=${query.ApexClasses}`,
+  ObjectMetadata: `/services/data/${SF_API_VERSION}/sobjects/`
 };

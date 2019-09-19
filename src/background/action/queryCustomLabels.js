@@ -1,11 +1,11 @@
-import { query } from '../../common/constants';
+import { urlSuffix } from '../../common/constants';
 
 let labels = [];
 
 export const queryCustomLabels = (request, sender, sendResponse, data) => {
   const { key, cookie } = request;
   const { domain, value } = cookie;
-  const url = `https://${domain}/services/data/v43.0/tooling/query/?q=${query.CustomLabels}`;
+  const url = `https://${domain}/${urlSuffix.CustomLabels}`;
   const headers = { Authorization: `Bearer ${value}` };
 
   labels = [];

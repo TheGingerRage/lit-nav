@@ -1,4 +1,4 @@
-export const storeCommands = (request, sender, sendResponse, data) => {
+export const storeCommands = (request, data) => {
   const { commands, orgKey, lastUpdated } = data;
   const { key, payload } = request;
 

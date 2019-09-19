@@ -1,5 +1,4 @@
 import { fetchCookie } from './fetchCookie';
-import { storeCommands } from './storeCommands';
 import { getCommands } from './getCommands';
 import { getSettings } from './getSettings';
 import { setSettings } from './setSettings';
@@ -9,10 +8,10 @@ import { lightningMetadata } from './lightningMetadata';
 import { visualForceMetadata } from './visualForceMetadata';
 import { actionType } from '../../common/constants';
 import { queryCustomLabels } from './queryCustomLabels';
+import { refreshMetadata } from './refreshMetadata';
 
 export const actions = {
   [actionType.FETCH_COOKIE]: fetchCookie,
-  [actionType.STORE_COMMANDS]: storeCommands,
   [actionType.GET_COMMANDS]: getCommands,
   [actionType.GET_SETTINGS]: getSettings,
   [actionType.SET_SETTINGS]: setSettings,
@@ -20,5 +19,6 @@ export const actions = {
   [actionType.QUERY_LABELS]: queryCustomLabels,
   [actionType.GET_LABELS]: getLabels,
   [actionType.LIGHTNING_METADATA]: lightningMetadata,
-  [actionType.VISUALFORCE_METADATA]: visualForceMetadata
+  [actionType.VISUALFORCE_METADATA]: visualForceMetadata,
+  [actionType.REFRESH_METADATA]: refreshMetadata
 };

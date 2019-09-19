@@ -9,6 +9,23 @@ var litnav = (function() {
   var cookie;
   var serverInstance;
   var clientId, omnomnom, hash;
+  var outp;
+  var tabHolder;
+  var oldins;
+  var posi = -1;
+  var newTabKeys = [
+    "ctrl+enter",
+    "command+enter",
+    "shift+enter"
+  ]
+  var metaData = {};
+  var cmds = {};
+  var shortcut;
+  var sid;
+  var sort;
+  var SFAPI_VERSION = 'v33.0';
+  var ftClient;
+  var customObjects = {};
 
   chrome.runtime.onMessage.addListener(
     request => {
@@ -18,45 +35,43 @@ var litnav = (function() {
         clientId = omnomnom.split('!')[0];
         hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
         serverInstance = `https://${cookie.domain}`;
-        chrome.runtime.sendMessage({ action: 'Get Labels', cookie: request.cookie, key: hash }, response => {
+
+        init();
+
+        chrome.runtime.sendMessage({ action: 'Get Labels', key: hash, cookie }, response => {
+          if(chrome.runtime.lastError) {
+            //TODO: Convert to same pattern as commands; sendResponse if no labels and then
+            //send a new action to Refresh Labels. Checking lastError avoids a console error
+            //for now
+            console.log("Lighting Navigator > Fetching Labels");
+          }
+          
           if(response && response.labels) {
             renderLabels(response.labels);
           }
         });
 
-        init();
+        chrome.runtime.sendMessage({ action: 'Get Commands', key: hash }, response => {
+          if(!response) {
+            //TODO: Set Loading... text + disable
+            chrome.runtime.sendMessage({ action: 'Refresh Metadata', key: hash, cookie });
+          } else {
+            cmds = response;
+          }
+        });
       }
 
       if(request.action === 'Render Labels') {
         renderLabels(request.labels);
       }
+
+      if(request.action === 'Refresh Metadata Success') {
+        cmds = request.commands;
+        hideLoadingIndicator();
+      }
     }
   )
 
-  var outp;
-  var labelp;
-  var tabHolder;
-  var oldins;
-  var posi = -1;
-  var newTabKeys = [
-    "ctrl+enter",
-    "command+enter",
-    "shift+enter"
-  ]
-  var input;
-  var key;
-  var metaData = {};
-  var cmds = {};
-  var isCtrl = false;
-
-  var loaded=false;
-  var shortcut;
-  var sid;
-  var sort;
-  var SFAPI_VERSION = 'v33.0';
-  var ftClient;
-  var labelData = [];
-  var customObjects = {};
   var META_DATATYPES = {
     "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
     "CHECKBOX": {name:"Checkbox",code:"cb", params:0},
@@ -579,7 +594,7 @@ var litnav = (function() {
 
         chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
         showLoadingIndicator();
-        getAllObjectMetadata();
+        //getAllObjectMetadata();
         setTimeout(function() {
           hideLoadingIndicator();
         }, 30000);
@@ -873,6 +888,7 @@ var litnav = (function() {
 
       if (obj.keyPrefix != null) {
         mRecord = {label, labelPlural, keyPrefix, urls} = obj;
+        console.log(mRecord, obj, mRecord === obj);
         metaData[obj.keyPrefix] = mRecord;
 
         act = {
@@ -929,18 +945,18 @@ var litnav = (function() {
     }
     req.send();
 
-    getSetupTree();
+    //getSetupTree();
     // getCustomObjects();
-    getCustomObjectsDef();
-    getApexClassesDef();
-    getTriggersDef();
-    getProfilesDef();
-    getPagesDef();
-    getUsersDef();
-    getComponentsDef();
-    getSysPropsNFORCEDef();
-    getSysPropsLLCBIDef();
-    getFlowsDef();
+    // getCustomObjectsDef();
+    // getApexClassesDef();
+    // getTriggersDef();
+    // getProfilesDef();
+    // getPagesDef();
+    // getUsersDef();
+    // getComponentsDef();
+    // getSysPropsNFORCEDef();
+    // getSysPropsLLCBIDef();
+    // getFlowsDef();
   }
 
   function parseSetupTree(html)
@@ -1152,74 +1168,25 @@ var litnav = (function() {
 
   function showLoadingIndicator()
   {
+    let searchBar = document.getElementById("litnav_quickSearch");
+    searchBar.value = "Loading...";
+    searchBar.setAttribute("disabled","true");
+
     document.getElementById('litnav_loader').style.visibility = 'visible';
   }
   function hideLoadingIndicator()
   {
+    let searchBar = document.getElementById("litnav_quickSearch");
+    searchBar.value = "";
+    searchBar.removeAttribute("disabled");
+
     document.getElementById('litnav_loader').style.visibility = 'hidden';
-  }
-  function getCustomObjectsDef()
-  {
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+DeveloperName,+NamespacePrefix,+ManageableState+FROM+CustomObject';
-    var req = new XMLHttpRequest();
-    req.open("GET", toolingUrl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseObjectDefs(response.target.responseText);
+
+    if(searchBar.style.visibility !== 'hidden') {
+      searchBar.focus();
     }
-    req.send();
-  }
-  function parseObjectDefs(_data) {
-      if (_data.length == 0) {
-        return;
-      }
-      var properties = JSON.parse(_data);
-      if (properties.nextRecordsUrl != undefined) {
-        var req = new XMLHttpRequest();
-        req.open("GET", properties.nextRecordsUrl, true);
-        req.setRequestHeader("Authorization", sid);
-        req.onload = function(response) {
-          parseObjectDefs(response.target.responseText);
-        }
-        req.send();
-      }
-      var action = {};
-      if (properties.records) {
-        properties.records.map( obj => {
-          if (obj.attributes != null) {
-            if (obj.ManageableState != 'unmanaged' || obj.NamespacePrefix == null) { 
-              propRecord = obj.DeveloperName, obj.NamespacePrefix, obj.Id;
-    
-              action = {
-                key: obj.DeveloperName,
-                keyPrefix: obj.Id,
-                url: serverInstance + '/' + obj.Id
-              }
-              var apiName = (obj.NamespacePrefix == null ? '' : obj.NamespacePrefix + '__') + obj.DeveloperName + '__c';
-              cmds['Setup > Custom Object > ' + apiName] = action;
-            }
-          }
-        });
-        store('Store Commands', cmds);
-      }
   }
 
-  function getApexClassesDef() {
-    ftClient.query('SELECT+Id,+Name,+NamespacePrefix+FROM+ApexClass',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].Name;
-          cmds['Setup > Apex Class > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying apex classes');
-      console.log('error =>> ', error);
-    });    
-  }
   function getTriggersDef() {
     ftClient.query('SELECT+Id,+Name+FROM+ApexTrigger',
     function(success)
@@ -1688,25 +1655,5 @@ var litnav = (function() {
     labelp = document.getElementById("litnav_labels");
     hideLoadingIndicator();
     initShortcuts();
-
-    chrome.runtime.sendMessage({
-      action: 'Get Commands', 
-      'key': hash 
-    },
-    response => {
-      if (!response || response.length === 0) {
-        cmds = {};
-        metaData = {};
-        getAllObjectMetadata();
-      } else {
-        cmds = response;
-      }
-    });
-
-    // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},
-    //   function(response) {
-    //     metaData = response;
-    // });
-
   }
 })();
