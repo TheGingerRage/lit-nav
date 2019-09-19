@@ -1187,22 +1187,6 @@ var litnav = (function() {
     }
   }
 
-  function getTriggersDef() {
-    ftClient.query('SELECT+Id,+Name+FROM+ApexTrigger',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = success.records[i].Name;
-          cmds['Setup > Apex Trigger > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying apex triggers');
-      console.log('error =>> ', error);
-    });
-  }
   function getProfilesDef() {
     ftClient.query('SELECT+Id,+Name+FROM+Profile',
     function(success)

@@ -4,6 +4,7 @@ import { getCustomObjectsDef } from './refreshMetadata/customObjectsDef';
 import { getObjectMetadata } from './refreshMetadata/objectMetadata';
 import { getApexClassesDef } from './refreshMetadata/apexClassesDef';
 import { storeCommands } from './storeCommands';
+import { getTriggersDef } from './refreshMetadata/triggersDef';
 
 export const refreshMetadata = (request, sender, sendResponse, data) => {
   const { cookie } = request;
@@ -18,7 +19,8 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
     getObjectMetadata(cookie, commands),
     getSetupTree(cookie, commands),
     getCustomObjectsDef(cookie, commands),
-    getApexClassesDef(cookie, commands)
+    getApexClassesDef(cookie, commands),
+    getTriggersDef(cookie, commands)
   ]).then(() => {
     storeCommands({ ...request, payload: commands }, data);
 
@@ -28,7 +30,6 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
     });
   });
 
-  // getTriggersDef();
   // getProfilesDef();
   // getPagesDef();
   // getUsersDef();

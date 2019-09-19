@@ -39,14 +39,21 @@ export const query = {
       Name,
       NamespacePrefix
     FROM
-      ApexClass`
+      ApexClass`,
+  Triggers: `
+      SELECT
+        Id,
+        Name
+      FROM 
+        ApexTrigger`
 };
 export const SF_API_VERSION = 'v46.0';
-export const toolingUrl = `services/data/${SF_API_VERSION}/tooling`;
+export const toolingPath = `services/data/${SF_API_VERSION}/tooling`;
 export const urlSuffix = {
   Setup: 'ui/setup/Setup',
-  CustomLabels: `${toolingUrl}/query/?q=${query.CustomLabels}`,
-  CustomObjectDef: `${toolingUrl}/query/?q=${query.CustomObjectDef}`,
-  ApexClasses: `${toolingUrl}/query?q=${query.ApexClasses}`,
+  CustomLabels: `${toolingPath}/query/?q=${query.CustomLabels}`,
+  CustomObjectDef: `${toolingPath}/query/?q=${query.CustomObjectDef}`,
+  ApexClasses: `${toolingPath}/query/?q=${query.ApexClasses}`,
+  Triggers: `${toolingPath}/query/?q=${query.Triggers}`,
   ObjectMetadata: `/services/data/${SF_API_VERSION}/sobjects/`
 };
