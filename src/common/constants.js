@@ -40,12 +40,27 @@ export const query = {
       NamespacePrefix
     FROM
       ApexClass`,
-  Triggers: `
-      SELECT
-        Id,
-        Name
-      FROM 
-        ApexTrigger`
+  Triggers: `SELECT Id, Name, NamespacePrefix FROM ApexTrigger`,
+  Profiles: `SELECT Id, Name FROM Profile`,
+  ApexPages: `SELECT Id, Name, NamespacePrefix FROM ApexPage`,
+  Users: `SELECT Id, Name FROM User`,
+  ApexComponents: `SELECT Id, Name, NamespacePrefix FROM ApexComponent`
+};
+export const defType = {
+  ApexPages: 'ApexPages',
+  Profiles: 'Profiles',
+  Triggers: 'Triggers',
+  ApexClasses: 'ApexClasses',
+  Users: 'Users',
+  ApexComponents: 'ApexComponents'
+};
+export const label = {
+  [defType.ApexPages]: 'Visualforce Page',
+  [defType.Profiles]: 'Profile',
+  [defType.Triggers]: 'Apex Trigger',
+  [defType.ApexClasses]: 'Apex Class',
+  [defType.Users]: 'User',
+  [defType.ApexComponents]: 'Visualforce Component'
 };
 export const SF_API_VERSION = 'v46.0';
 export const toolingPath = `services/data/${SF_API_VERSION}/tooling`;
@@ -53,7 +68,14 @@ export const urlSuffix = {
   Setup: 'ui/setup/Setup',
   CustomLabels: `${toolingPath}/query/?q=${query.CustomLabels}`,
   CustomObjectDef: `${toolingPath}/query/?q=${query.CustomObjectDef}`,
-  ApexClasses: `${toolingPath}/query/?q=${query.ApexClasses}`,
-  Triggers: `${toolingPath}/query/?q=${query.Triggers}`,
-  ObjectMetadata: `/services/data/${SF_API_VERSION}/sobjects/`
+  ObjectMetadata: `/services/data/${SF_API_VERSION}/sobjects/`,
+  [defType.ApexClasses]: `${toolingPath}/query/?q=${query.ApexClasses}`,
+  [defType.Triggers]: `${toolingPath}/query/?q=${query.Triggers}`,
+  [defType.Profiles]: `${toolingPath}/query/?q=${query.Profiles}`,
+  [defType.ApexPages]: `${toolingPath}/query/?q=${query.ApexPages}`,
+  [defType.Users]: `${toolingPath}/query/?q=${query.Users}`,
+  [defType.ApexComponents]: `${toolingPath}/query/?q=${query.ApexComponents}`
+};
+export const urlExtra = {
+  [defType.Users]: '?noredirect=1'
 };
