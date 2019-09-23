@@ -1,9 +1,10 @@
-import { actionType, urlSuffix, label, urlExtra, defType } from '../../common/constants';
+import { actionType, urlSuffix, defLabel, defUrlExtra, defType } from '../../common/constants';
 import { getSetupTree } from './refreshMetadata/setupTree';
 import { getCustomObjectsDef } from './refreshMetadata/customObjectsDef';
 import { getObjectMetadata } from './refreshMetadata/objectMetadata';
 import { storeCommands } from './storeCommands';
 import { getDefTemplate } from './refreshMetadata/getDefTemplate';
+import { getNForceSysProps } from './refreshMetadata/nForceSysProps';
 
 export const refreshMetadata = (request, sender, sendResponse, data) => {
   const { cookie } = request;
@@ -18,8 +19,8 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
   const getDef = type => {
     const config = {
       url: getUrl(domain, urlSuffix[type]),
-      label: label[type],
-      urlExtra: urlExtra[type]
+      label: defLabel[type],
+      urlExtra: defUrlExtra[type]
     };
 
     return getDefTemplate(cookie, commands, config);
@@ -29,6 +30,7 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
     getObjectMetadata(cookie, commands),
     getSetupTree(cookie, commands),
     getCustomObjectsDef(cookie, commands),
+    getNForceSysProps(cookie, commands),
     ...Object.keys(defType).map(getDef)
   ]).then(() => {
     storeCommands({ ...request, payload: commands }, data);
@@ -39,7 +41,6 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
     });
   });
 
-  // getSysPropsNFORCEDef();
   // getSysPropsLLCBIDef();
   // getFlowsDef();
 };

@@ -174,12 +174,6 @@ var litnav = (function() {
       return true;
     }
 
-  function getSingleObjectMetadata()
-  {
-    var recordId = document.URL.split('/')[3];
-    var keyPrefix = recordId.substring(0,3);
-
-  }
   function addElements(ins)
   {
     if (ins.substring(0,9) == 'login as ')
@@ -334,16 +328,6 @@ var litnav = (function() {
     if (posi == -1 && firstEl != null) firstEl.className = "litnav_child litnav_selected"
   }
 
-  function httpGet(url, callback)
-  {
-    var req = new XMLHttpRequest();
-    req.open("GET", url, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      callback(response);
-    }
-    req.send();
-  }
   function getVisible() {
     return document.getElementById("litnav_shadow").style.visibility;
   }
@@ -528,10 +512,6 @@ var litnav = (function() {
 
     return words;
   }
-  function setColor (_posi, _color, _forg) {
-    outp.childNodes[_posi].style.background = _color;
-    outp.childNodes[_posi].style.color = _forg;
-  }
 
   function invokeCommand(cmd, newtab, event) {
     if (event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
@@ -592,6 +572,7 @@ var litnav = (function() {
           return;
         }
 
+        chrome.runtime.sendMessage({ action: 'Refresh Metadata', key: hash, cookie });
         chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
         showLoadingIndicator();
         //getAllObjectMetadata();
@@ -877,47 +858,6 @@ var litnav = (function() {
     setVisible("visible");
   }
 
-  function getMetadata(_data) {
-    if (_data.length == 0) return;
-    var metadata = JSON.parse(_data);
-
-    var mRecord = {};
-    var act = {};
-    metaData = {};
-    metadata.sobjects.map( obj => {
-
-      if (obj.keyPrefix != null) {
-        mRecord = {label, labelPlural, keyPrefix, urls} = obj;
-        console.log(mRecord, obj, mRecord === obj);
-        metaData[obj.keyPrefix] = mRecord;
-
-        act = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix
-        }
-        if (mRecord.name.indexOf('__') != -1 && mRecord.name.indexOf('__') != mRecord.name.indexOf('__c')) {
-          cmds['List ' + mRecord.labelPlural + ' (' + mRecord.name.split('__')[0] + ')'] = act;
-          cmds['List ' + mRecord.labelPlural + ' (' + mRecord.name.split('__')[0] + ')']['synonyms'] = [obj.name];
-        } else {
-          cmds['List ' + mRecord.labelPlural] = act;
-          cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name];
-        }
-        act = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix + '/e',
-        }
-        cmds['New ' + mRecord.label] = act;
-        cmds['New ' + mRecord.label]['synonyms'] = [obj.name];
-
-      }
-    })
-
-    store('Store Commands', cmds);
-    // store('Store Metadata', metaData)
-  }
-
   function store(action, payload) {
     const req = {
       action,
@@ -926,91 +866,6 @@ var litnav = (function() {
     };
 
     chrome.runtime.sendMessage(req);
-  }
-
-  function getAllObjectMetadata() {
-    sid = "Bearer " + getCookie('sid');
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
-
-    cmds['Refresh Metadata'] = {};
-    cmds['Setup'] = {};
-    cmds['OrgLimits'] = {};
-    cmds['clabels'] = {};
-    var req = new XMLHttpRequest();
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      getMetadata(response.target.responseText);
-
-    }
-    req.send();
-
-    //getSetupTree();
-    // getCustomObjects();
-    // getCustomObjectsDef();
-    // getApexClassesDef();
-    // getTriggersDef();
-    // getProfilesDef();
-    // getPagesDef();
-    // getUsersDef();
-    // getComponentsDef();
-    // getSysPropsNFORCEDef();
-    // getSysPropsLLCBIDef();
-    // getFlowsDef();
-  }
-
-  function parseSetupTree(html)
-  {
-    if(html && html.querySelectorAll) {
-      var textLeafSelector = '.setupLeaf > a[id*="_font"]';
-      var all = html.querySelectorAll(textLeafSelector);
-      var strName;
-      var as;
-      var strNameMain;
-      var strName;
-      [].map.call(all, function(item) {
-        var hasTopParent = false, hasParent = false;
-        var parent, topParent;
-        var parentEl, topParentEl;
-
-        if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
-            && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
-
-          hasParent = true;
-          parentEl = item.parentElement.parentElement.parentElement;
-          parent = parentEl.querySelector('.setupFolder').innerText;
-        }
-        if (hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
-          && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
-          hasTopParent = true;
-          topParentEl = parentEl.parentElement.parentElement;
-          topParent = topParentEl.querySelector('.setupFolder').innerText;
-        }
-
-        strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
-        strNameMain += (hasParent ? (parent + ' > ') : '');
-
-        strName = strNameMain + item.innerText;
-
-        if (cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
-
-      });
-      store('Store Commands', cmds);
-    }
-  }
-
-  function getSetupTree() {
-
-    var theurl = serverInstance + '/ui/setup/Setup'
-    var req = new XMLHttpRequest();
-    req.onload = function() {
-      parseSetupTree(this.response);
-      hideLoadingIndicator();
-    }
-    req.open("GET", theurl);
-    req.responseType = 'document';
-
-    req.send();
   }
 
   function getCustomObjects()
@@ -1187,48 +1042,6 @@ var litnav = (function() {
     }
   }
 
-  function getSysPropsNFORCEDef() {
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
-      + '/query?q=SELECT+Id,+Name,+nFORCE__Category_Name__c,+nFORCE__Key__c+FROM+nFORCE__System_Properties__c';
-    var req = new XMLHttpRequest();
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseSysPropsNFORCE(response.target.responseText);
-    }
-    req.send();
-  }
-  function parseSysPropsNFORCE(_data) {
-    if (_data.length == 0) {
-      return;
-    }
-    var properties = JSON.parse(_data);
-    if (properties.nextRecordsUrl != undefined) {
-      var req = new XMLHttpRequest();
-      req.open("GET", properties.nextRecordsUrl, true);
-      req.setRequestHeader("Authorization", sid);
-      req.onload = function(response) {
-        parseSysPropsNFORCE(response.target.responseText);
-      }
-      req.send();
-    }
-    var action = {};
-    if (properties.records) {
-      properties.records.map( obj => {
-        if (obj.attributes != null) {
-          propRecord = obj.nFORCE__Category_Name__c, obj.nFORCE__Key__c, obj.Name, obj.Id;
-
-          action = {
-            key: obj.name,
-            keyPrefix: obj.Id,
-            url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
-          }
-          cmds['Setup > System Property (nFORCE) > ' + obj.nFORCE__Category_Name__c + ' > ' + obj.nFORCE__Key__c] = action;
-        }
-      });
-      store('Store Commands', cmds);
-    }
-  }
   function getSysPropsLLCBIDef() {
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
       + '/query?q=SELECT+Id,+Name,+LLC_BI__Category_Name__c,+LLC_BI__Key__c+FROM+LLC_BI__System_Properties__c';

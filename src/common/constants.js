@@ -1,3 +1,4 @@
+export const SF_API_VERSION = 'v46.0';
 export const excludedDomains = ['visual.force.com', 'content.force.com', 'lightning.force.com'];
 export const actionType = {
   FETCH_COOKIE: 'Fetch Cookie',
@@ -44,7 +45,15 @@ export const query = {
   Profiles: `SELECT Id, Name FROM Profile`,
   ApexPages: `SELECT Id, Name, NamespacePrefix FROM ApexPage`,
   Users: `SELECT Id, Name FROM User`,
-  ApexComponents: `SELECT Id, Name, NamespacePrefix FROM ApexComponent`
+  ApexComponents: `SELECT Id, Name, NamespacePrefix FROM ApexComponent`,
+  nForceSysProps: `
+    SELECT
+      Id,
+      Name,
+      nFORCE__Category_Name__c,
+      nFORCE__Key__c
+    FROM
+      nFORCE__System_Properties__c`
 };
 export const defType = {
   ApexPages: 'ApexPages',
@@ -54,7 +63,7 @@ export const defType = {
   Users: 'Users',
   ApexComponents: 'ApexComponents'
 };
-export const label = {
+export const defLabel = {
   [defType.ApexPages]: 'Visualforce Page',
   [defType.Profiles]: 'Profile',
   [defType.Triggers]: 'Apex Trigger',
@@ -62,20 +71,21 @@ export const label = {
   [defType.Users]: 'User',
   [defType.ApexComponents]: 'Visualforce Component'
 };
-export const SF_API_VERSION = 'v46.0';
+export const defUrlExtra = {
+  [defType.Users]: '?noredirect=1'
+};
 export const toolingPath = `services/data/${SF_API_VERSION}/tooling`;
+export const dataPath = `services/data/${SF_API_VERSION}`;
 export const urlSuffix = {
   Setup: 'ui/setup/Setup',
   CustomLabels: `${toolingPath}/query/?q=${query.CustomLabels}`,
   CustomObjectDef: `${toolingPath}/query/?q=${query.CustomObjectDef}`,
-  ObjectMetadata: `/services/data/${SF_API_VERSION}/sobjects/`,
+  ObjectMetadata: `${dataPath}/sobjects/`,
+  nForceSysProps: `${dataPath}/query/?q=${query.nForceSysProps}`,
   [defType.ApexClasses]: `${toolingPath}/query/?q=${query.ApexClasses}`,
   [defType.Triggers]: `${toolingPath}/query/?q=${query.Triggers}`,
   [defType.Profiles]: `${toolingPath}/query/?q=${query.Profiles}`,
   [defType.ApexPages]: `${toolingPath}/query/?q=${query.ApexPages}`,
   [defType.Users]: `${toolingPath}/query/?q=${query.Users}`,
   [defType.ApexComponents]: `${toolingPath}/query/?q=${query.ApexComponents}`
-};
-export const urlExtra = {
-  [defType.Users]: '?noredirect=1'
 };
