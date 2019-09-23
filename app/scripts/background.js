@@ -38,10 +38,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                         const headers = { Authorization: `Bearer ${cookie.value}` };
 
                         fetch(testUrl, { headers })
-                            .then(() => {
-                                chrome.tabs.sendMessage(sender.tab.id, { cookie });
+                            .then(response => {
+                                if(response.status === 200) {
+                                    chrome.tabs.sendMessage(sender.tab.id, { cookie });
+                                }
                             })
-                            .catch(err => {});
+                            .catch(err => console.error(err));
                     });
                 }
             });
