@@ -11,43 +11,43 @@ const getFilteredCookies = (allCookies, filter) => {
     );
 };
 
+const getDomain = url => {
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    return a.hostname;
+};
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var orgKey = request.key != null ? request.key.split('!')[0] : null;
 
     if (request.action === 'Loaded') {
-        const orgDomain = sender.tab.url.replace(/https?:\/\/(.*\.com).*/, '$1');
+        const orgDomain = getDomain(sender.tab.url);
         const parts = orgDomain.split('.');
+        let orgName = parts[0];
 
-        if (parts.length > 0) {
-            let orgName = parts[0].replace(/--.*/, '');
+        chrome.cookies.getAll({ name: 'sid' }, allCookies => {
+            const possibleCookies = getFilteredCookies(allCookies, orgName);
 
-            chrome.cookies.getAll({ name: 'sid' }, allCookies => {
-                let possibleCookies = getFilteredCookies(allCookies, orgName);
-
-                if (possibleCookies.length === 0 && parts.length > 1) {
-                    orgName = parts[1].replace(/--.*/, '');
-                    possibleCookies = getFilteredCookies(allCookies, orgName);
-                }
-                
+            if (possibleCookies.length > 0) {
                 const testQuery = 'SELECT+Id+FROM+Account+LIMIT+1';
                 const testPath = `services/data/v46.0/query/?q=${testQuery}`;
+                let cookie = null;
+                
+                possibleCookies.forEach(c => {
+                    const testUrl = `https://${c.domain}/${testPath}`;
+                    const headers = { Authorization: `Bearer ${c.value}` };
 
-                if (possibleCookies.length > 0) {
-                    possibleCookies.forEach(cookie => {
-                        const testUrl = `https://${cookie.domain}/${testPath}`;
-                        const headers = { Authorization: `Bearer ${cookie.value}` };
-
-                        fetch(testUrl, { headers })
-                            .then(response => {
-                                if(response.status === 200) {
-                                    chrome.tabs.sendMessage(sender.tab.id, { cookie });
-                                }
-                            })
-                            .catch(err => console.error(err));
-                    });
-                }
-            });
-        }
+                    fetch(testUrl, { headers })
+                        .then(response => {
+                            if(response.status === 200 && !cookie) {
+                                cookie = c;
+                                chrome.tabs.sendMessage(sender.tab.id, { cookie });
+                            }
+                        })
+                        .catch(err => console.error(err));
+                });
+            }
+        });
     }
 
     if (request.action == 'Store Commands') {
