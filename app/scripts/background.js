@@ -28,10 +28,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     orgName = parts[1].replace(/--.*/, '');
                     possibleCookies = getFilteredCookies(allCookies, orgName);
                 }
+                
+                const testQuery = 'SELECT+Id+FROM+Account+LIMIT+1';
+                const testPath = `services/data/v46.0/query/?q=${testQuery}`;
 
                 if (possibleCookies.length > 0) {
-                    cookie = possibleCookies[0].value;
-                    chrome.tabs.sendMessage(sender.tab.id, { cookie });
+                    possibleCookies.forEach(cookie => {
+                        const testUrl = `https://${cookie.domain}/${testPath}`;
+                        const headers = { Authorization: `Bearer ${cookie.value}` };
+
+                        fetch(testUrl, { headers })
+                            .then(() => {
+                                chrome.tabs.sendMessage(sender.tab.id, { cookie });
+                            })
+                            .catch(err => {});
+                    });
                 }
             });
         }

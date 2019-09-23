@@ -1014,7 +1014,7 @@ var litnav = (function() {
 
   function getCookie()
   {
-    return cookie;
+    return cookie.value;
   }
 
   function getServerInstance()
