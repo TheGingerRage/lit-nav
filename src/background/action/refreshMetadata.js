@@ -5,6 +5,8 @@ import { getObjectMetadata } from './refreshMetadata/objectMetadata';
 import { storeCommands } from './storeCommands';
 import { getDefTemplate } from './refreshMetadata/getDefTemplate';
 import { getNForceSysProps } from './refreshMetadata/nForceSysProps';
+import { getLlcBiSysProps } from './refreshMetadata/LlcBiSysProps';
+import { getFlowsDef } from './refreshMetadata/flowsDef';
 
 export const refreshMetadata = (request, sender, sendResponse, data) => {
   const { cookie } = request;
@@ -30,7 +32,9 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
     getObjectMetadata(cookie, commands),
     getSetupTree(cookie, commands),
     getCustomObjectsDef(cookie, commands),
+    getFlowsDef(cookie, commands),
     getNForceSysProps(cookie, commands),
+    getLlcBiSysProps(cookie, commands),
     ...Object.keys(defType).map(getDef)
   ]).then(() => {
     storeCommands({ ...request, payload: commands }, data);
@@ -40,9 +44,6 @@ export const refreshMetadata = (request, sender, sendResponse, data) => {
       commands
     });
   });
-
-  // getSysPropsLLCBIDef();
-  // getFlowsDef();
 };
 
 const getUrl = (domain, urlSuffix) => {

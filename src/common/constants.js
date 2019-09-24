@@ -46,6 +46,12 @@ export const query = {
   ApexPages: `SELECT Id, Name, NamespacePrefix FROM ApexPage`,
   Users: `SELECT Id, Name FROM User`,
   ApexComponents: `SELECT Id, Name, NamespacePrefix FROM ApexComponent`,
+  Flows: `
+    SELECT
+      Id,
+      DeveloperName
+    FROM
+      FlowDefinition`,
   nForceSysProps: `
     SELECT
       Id,
@@ -54,6 +60,14 @@ export const query = {
       nFORCE__Key__c
     FROM
       nFORCE__System_Properties__c`,
+  LlcBiSysProps: `
+    SELECT
+      Id,
+      Name,
+      LLC_BI__Category_Name__c,
+      LLC_BI__Key__c
+    FROM
+      LLC_BI__System_Properties__c`,
   TestCookie: `SELECT Id FROM Account LIMIT 1`
 };
 export const defType = {
@@ -82,7 +96,9 @@ export const urlSuffix = {
   CustomLabels: `${toolingPath}/query/?q=${query.CustomLabels}`,
   CustomObjectDef: `${toolingPath}/query/?q=${query.CustomObjectDef}`,
   ObjectMetadata: `${dataPath}/sobjects/`,
+  Flows: `${toolingPath}/query/?q=${query.Flows}`,
   nForceSysProps: `${dataPath}/query/?q=${query.nForceSysProps}`,
+  LlcBiSysProps: `${dataPath}/query/?q=${query.LlcBiSysProps}`,
   TestCookie: `${dataPath}/query/?q=${query.TestCookie}`,
   [defType.ApexClasses]: `${toolingPath}/query/?q=${query.ApexClasses}`,
   [defType.Triggers]: `${toolingPath}/query/?q=${query.Triggers}`,
