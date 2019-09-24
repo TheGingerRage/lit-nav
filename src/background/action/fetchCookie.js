@@ -1,4 +1,4 @@
-import { excludedDomains } from '../../common/constants';
+import { excludedDomains, urlSuffix } from '../../common/constants';
 
 const getFilteredCookies = (allCookies, filter) => {
   return allCookies.filter(
@@ -6,24 +6,36 @@ const getFilteredCookies = (allCookies, filter) => {
   );
 };
 
+const getDomain = url => {
+  const a = document.createElement('a');
+  a.setAttribute('href', url);
+  return a.hostname;
+};
+
 export const fetchCookie = (request, sender, sendResponse, data) => {
-  const orgDomain = sender.tab.url.replace(/https?:\/\/(.*\.com).*/, '$1');
+  const orgDomain = getDomain(sender.tab.url);
   const parts = orgDomain.split('.');
+  let orgName = parts[0];
 
-  if (parts.length > 0) {
-    let orgName = parts[0].replace(/--.*/, '');
+  chrome.cookies.getAll({ name: 'sid' }, allCookies => {
+    const possibleCookies = getFilteredCookies(allCookies, orgName);
 
-    chrome.cookies.getAll({ name: 'sid' }, allCookies => {
-      let possibleCookies = getFilteredCookies(allCookies, orgName);
+    if (possibleCookies.length > 0) {
+      let cookie = null;
 
-      if (possibleCookies.length === 0 && parts.length > 1) {
-        orgName = parts[1].replace(/--.*/, '');
-        possibleCookies = getFilteredCookies(allCookies, orgName);
-      }
+      possibleCookies.forEach(c => {
+        const testUrl = `https://${c.domain}/${urlSuffix.TestCookie}`;
+        const headers = { Authorization: `Bearer ${c.value}` };
 
-      if (possibleCookies.length > 0) {
-        chrome.tabs.sendMessage(sender.tab.id, { cookie: possibleCookies[0] });
-      }
-    });
-  }
+        fetch(testUrl, { headers })
+          .then(response => {
+            if (response.status === 200 && !cookie) {
+              cookie = c;
+              chrome.tabs.sendMessage(sender.tab.id, { cookie });
+            }
+          })
+          .catch(err => console.error(err));
+      });
+    }
+  });
 };

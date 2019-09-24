@@ -53,7 +53,8 @@ export const query = {
       nFORCE__Category_Name__c,
       nFORCE__Key__c
     FROM
-      nFORCE__System_Properties__c`
+      nFORCE__System_Properties__c`,
+  TestCookie: `SELECT Id FROM Account LIMIT 1`
 };
 export const defType = {
   ApexPages: 'ApexPages',
@@ -82,6 +83,7 @@ export const urlSuffix = {
   CustomObjectDef: `${toolingPath}/query/?q=${query.CustomObjectDef}`,
   ObjectMetadata: `${dataPath}/sobjects/`,
   nForceSysProps: `${dataPath}/query/?q=${query.nForceSysProps}`,
+  TestCookie: `${dataPath}/query/?q=${query.TestCookie}`,
   [defType.ApexClasses]: `${toolingPath}/query/?q=${query.ApexClasses}`,
   [defType.Triggers]: `${toolingPath}/query/?q=${query.Triggers}`,
   [defType.Profiles]: `${toolingPath}/query/?q=${query.Profiles}`,
