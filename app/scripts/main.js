@@ -529,56 +529,9 @@ var litnav = (function() {
       }
     if (cmd.toLowerCase() == 'refresh metadata')
       {
-        let searchBar = document.getElementById("litnav_quickSearch");
-        if (location.origin.indexOf("visual.force") !== -1) {
-          // document.getElementById('sfnav_quickSearch').value = 'Refresh does not work in VisualForce, run from Setup';
-          clearOutput();
-          setVisible("hidden");
-          chrome.runtime.sendMessage({action:'VisualForce Metadata', 'key': hash});
-
-          setTimeout(function() { 
-            chrome.runtime.sendMessage({
-              action:'Get Commands', 'key': hash},
-              function(response) {
-                cmds = response;
-              }
-            );
-            
-            chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
-            searchBar.value = '';
-            setVisible("visible");
-          }, 2000);
-          return;
-        }
-        if (location.origin.indexOf('lightning.force') !== -1) {
-          // document.getElementById('sfnav_quickSearch').value = 'Refresh does not work in Lightning, run in Classic Setup';
-          clearOutput();
-          setVisible("hidden");
-          chrome.runtime.sendMessage({action:'Lightning Metadata', 'key': hash});
-
-          setTimeout(function() { 
-            chrome.runtime.sendMessage({
-              action:'Get Commands', 'key': hash},
-              function(response) {
-                cmds = response;
-              }
-            );
-            
-            chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
-            searchBar.value = '';
-            setVisible("visible");
-          }, 4000);
-
-          return;
-        }
-
         chrome.runtime.sendMessage({ action: 'Refresh Metadata', key: hash, cookie });
-        chrome.runtime.sendMessage({ action: 'Query Labels', cookie, key: hash });
+        chrome.runtime.sendMessage({ action: 'Query Labels', key: hash, cookie });
         showLoadingIndicator();
-        //getAllObjectMetadata();
-        setTimeout(function() {
-          hideLoadingIndicator();
-        }, 30000);
         return true;
       }
     if (cmd.toLowerCase() == 'clabels')
@@ -1043,7 +996,58 @@ var litnav = (function() {
   }
 
   function renderLabels(labels) {
-        if (labels.length > 0) {
+    var labelDiv = document.getElementById('litnav_labels');
+
+    if(labelDiv) {
+      document.body.removeChild(labelDiv);
+    }
+    
+      if (labels.length > 0) {
+        var labelDiv = document.createElement('div');
+        labelDiv.setAttribute('id', 'litnav_labels');
+        labelDiv.innerHTML = `
+          <div class="litnav_labels_tab">
+            <div class="litnav_filter">
+              <input id="litnav_filter_input" class="litnav_filter_input" value="Filter">
+            </div>
+            <button id="all_button" class="tablinks">All Namespaces</button>
+          </div>
+          <div id="tabHolder">
+            <div id="All Namespaces" class="litnav_labels_tabcontent">
+              <table id="ltable-All Namespaces" border="0" cellpadding="0" cellspacing="0" class="sortable">
+                <col class="c1">
+                <col class="c2">
+                <col class="c3">
+                <col class="c4">
+                <col class="c5">
+                <thead class="sortableColumns">
+                  <tr id="header" class="litnav_row_header" style="background-color: rgb(255, 255, 255);">
+                    <th>Category</th>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Record</th>
+                    <th>Translation</th>
+                  </tr>
+                </thead>
+                <tbody id="lbody-All Namespaces">
+                </tbody>
+                <tfoot>
+                </tfoot>
+              </table>
+            </div>
+          </div>`;
+        document.body.appendChild(labelDiv);
+        var filterInput = document.getElementById('litnav_filter_input');
+        filterInput.onchange = function() {
+          filterLabels(filterInput.value);
+        }
+        var button = document.getElementById('all_button');
+        button.addEventListener('click', openTab);
+        button.tabName = 'All Namespaces';
+
+        outp = document.getElementById("litnav_output");
+        labelp = document.getElementById("litnav_labels");
+
         labels.forEach( obj => {
           if (obj.attributes != null) {
             propRecord = obj.DeveloperName, obj.Id;
@@ -1267,50 +1271,6 @@ var litnav = (function() {
 
     document.body.appendChild(div);
 
-    var labelDiv = document.createElement('div');
-    labelDiv.setAttribute('id', 'litnav_labels');
-    labelDiv.innerHTML = `
-      <div class="litnav_labels_tab">
-        <div class="litnav_filter">
-          <input id="litnav_filter_input" class="litnav_filter_input" value="Filter">
-        </div>
-        <button id="all_button" class="tablinks">All Namespaces</button>
-      </div>
-      <div id="tabHolder">
-        <div id="All Namespaces" class="litnav_labels_tabcontent">
-          <table id="ltable-All Namespaces" border="0" cellpadding="0" cellspacing="0" class="sortable">
-            <col class="c1">
-            <col class="c2">
-            <col class="c3">
-            <col class="c4">
-            <col class="c5">
-            <thead class="sortableColumns">
-              <tr id="header" class="litnav_row_header" style="background-color: rgb(255, 255, 255);">
-                <th>Category</th>
-                <th>Name</th>
-                <th>Value</th>
-                <th>Record</th>
-                <th>Translation</th>
-              </tr>
-            </thead>
-            <tbody id="lbody-All Namespaces">
-            </tbody>
-            <tfoot>
-            </tfoot>
-          </table>
-        </div>
-      </div>`;
-    document.body.appendChild(labelDiv);
-    var filterInput = document.getElementById('litnav_filter_input');
-    filterInput.onchange = function() {
-      filterLabels(filterInput.value);
-    }
-    var button = document.getElementById('all_button');
-    button.addEventListener('click', openTab);
-    button.tabName = 'All Namespaces';
-
-    outp = document.getElementById("litnav_output");
-    labelp = document.getElementById("litnav_labels");
     hideLoadingIndicator();
     initShortcuts();
   }
