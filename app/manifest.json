@@ -3,6 +3,15 @@
   "version": "0.3.2",
   "manifest_version": 2,
   "default_locale": "en",
+  "commands": {
+    "show-command-bar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Space",
+        "mac": "MacCtrl+Shift+Space"
+      },
+      "description": "Show Lightning Navigator Command Bar"
+    }
+  },
   "browser_action": {
     "default_icon": "images/ncino_38.png",
     "default_popup": "popup.html"
