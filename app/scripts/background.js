@@ -26,7 +26,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         let orgName = parts[0];
 
         chrome.cookies.getAll({ name: 'sid' }, allCookies => {
-            const possibleCookies = getFilteredCookies(allCookies, orgName);
+            let possibleCookies = getFilteredCookies(allCookies, orgName);
+
+            while (possibleCookies.length === 0 && orgName.lastIndexOf('--') !== -1) {
+                orgName = orgName.substring(0, orgName.lastIndexOf('--'));
+                possibleCookies = getFilteredCookies(allCookies, orgName);
+            }
 
             if (possibleCookies.length > 0) {
                 const testQuery = 'SELECT+Id+FROM+Account+LIMIT+1';
