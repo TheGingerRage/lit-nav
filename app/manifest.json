@@ -1,45 +1,55 @@
 {
-    "name": "Lightning Navigator",
-    "version": "0.3.2",
-    "manifest_version": 2,
-    "default_locale": "en",
-    "browser_action": {
-        "default_icon": "images/ncino_38.png",
-        "default_popup": "popup.html"
-    },
-    "background": {
-        "scripts": ["scripts/background.js"],
-        "persistent": true
-    },
-    "icons": {
-        "128": "images/128.png"
-    },
-    "web_accessible_resources": ["images/ajax-loader.gif", "images/ncino_128.png"],
-    "description": "",
-    "content_scripts": [
-        {
-            "css": ["styles/main.css"],
-            "matches": [
-                "https://*.force.com/*",
-                "https://*.salesforce.com/*",
-                "https://*.cloudforce.com/*"
-            ],
-            "js": [
-                "scripts/jquery.js",
-                "scripts/mousetrap.min.js",
-                "scripts/forceTooling.js",
-                "scripts/main.js",
-                "scripts/sorttable.js"
-            ],
-            "run_at": "document_end"
-        }
-    ],
-    "permissions": [
+  "name": "Lightning Navigator",
+  "version": "0.3.2",
+  "manifest_version": 2,
+  "default_locale": "en",
+  "commands": {
+    "show-command-bar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Space",
+        "mac": "MacCtrl+Shift+Space"
+      },
+      "description": "Show Lightning Navigator Command Bar"
+    }
+  },
+  "browser_action": {
+    "default_icon": "images/ncino_38.png",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["scripts/litnav_background_bundle.js"],
+    "persistent": true
+  },
+  "icons": {
+    "128": "images/128.png"
+  },
+  "web_accessible_resources": ["images/ajax-loader.gif", "images/ncino_128.png"],
+  "description": "",
+  "content_scripts": [
+    {
+      "css": ["styles/main.css"],
+      "matches": [
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
         "https://*.cloudforce.com/*",
-        "storage",
-        "tabs",
-        "cookies"
-    ]
+        "https://*.visualforce.com/*"
+      ],
+      "js": [
+        "scripts/jquery.js",
+        "scripts/mousetrap.min.js",
+        "scripts/forceTooling.js",
+        "scripts/main.js",
+        "scripts/sorttable.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": [
+    "https://*.force.com/*",
+    "https://*.salesforce.com/*",
+    "https://*.cloudforce.com/*",
+    "storage",
+    "tabs",
+    "cookies"
+  ]
 }
