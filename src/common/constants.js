@@ -4,16 +4,16 @@ export const actionType = {
   FETCH_COOKIE: 'Fetch Cookie',
   STORE_COMMANDS: 'Store Commands',
   GET_COMMANDS: 'Get Commands',
-  GET_SETTINGS: 'Get Settings',
-  SET_SETTINGS: 'Set Settings',
   STORE_METADATA: 'Store Metadata',
   GET_METADATA: 'Get Metadata',
   QUERY_LABELS: 'Query Labels',
   GET_LABELS: 'Get Labels',
-  LIGHTNING_METADATA: 'Lightning Metadata',
-  VISUALFORCE_METADATA: 'VisualForce Metadata',
   REFRESH_METADATA: 'Refresh Metadata',
-  REFRESH_METADATA_SUCCESS: 'Refresh Metadata Success'
+  REFRESH_METADATA_SUCCESS: 'Refresh Metadata Success',
+  SHOW_COMMAND_BAR: 'Show Command Bar'
+};
+export const command = {
+  ShowCommandBar: 'show-command-bar'
 };
 export const query = {
   CustomLabels: `

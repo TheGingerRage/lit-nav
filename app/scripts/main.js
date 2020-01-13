@@ -61,13 +61,20 @@ var litnav = (function() {
         });
       }
 
-      if(request.action === 'Render Labels') {
-        renderLabels(request.labels);
-      }
+      switch(request.action) {
+        case 'Render Labels':
+          renderLabels(request.labels);
+          break;
 
-      if(request.action === 'Refresh Metadata Success') {
-        cmds = request.commands;
-        hideLoadingIndicator();
+        case 'Refresh Metadata Success':
+          cmds = request.commands;
+          hideLoadingIndicator();
+          break;
+
+        case 'Show Command Bar':
+          setVisibleSearch("visible");
+          setVisible('visible');
+          break;
       }
     }
   )
@@ -854,17 +861,6 @@ var litnav = (function() {
     return`https://${cookie.domain}`;
   }
 
-  function initShortcuts() {
-    chrome.runtime.sendMessage({'action':'Get Settings'},
-      function(response) {
-        if (response !== undefined) {
-          shortcut = response['shortcut'];
-          bindShortcut(shortcut);
-        }
-      }
-    );
-  }
-
   function kbdCommand(e, key) {
     var position = posi;
     var origText = '', newText = '';
@@ -872,10 +868,9 @@ var litnav = (function() {
 
     origText = document.getElementById("litnav_quickSearch").value;
     if (typeof outp.childNodes[position] != 'undefined')
-      {
-        newText = outp.childNodes[position].firstChild.nodeValue;
-
-      }
+    {
+      newText = outp.childNodes[position].firstChild.nodeValue;
+    }
 
     var newtab = newTabKeys.indexOf(key) >= 0 ? true : false;
     if (!newtab) {
@@ -923,17 +918,10 @@ var litnav = (function() {
     }
   }
 
-  function bindShortcut(shortcut) {
-
+  function setKeyboardBindings() {
     let searchBar = document.getElementById('litnav_quickSearch');
 
-    Mousetrap.bindGlobal(shortcut, function(e) {
-      setVisibleSearch("visible");
-      return false;
-    });
-
     Mousetrap.bindGlobal('esc', function(e) {
-
       if (isVisible() || isVisibleSearch()) {
 
         searchBar.blur();
@@ -947,31 +935,21 @@ var litnav = (function() {
     });
 
     Mousetrap.wrap(searchBar).bind('enter', kbdCommand);
-
-    for (var i = 0; i < newTabKeys.length; i++) {
-      Mousetrap.wrap(searchBar).bind(newTabKeys[i], kbdCommand);
-    };
-
+    newTabKeys.forEach(k => Mousetrap.wrap(searchBar).bind(k, kbdCommand));
     Mousetrap.wrap(searchBar).bind('down', selectMove.bind(this, 'down'));
-
     Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'));
-
-    Mousetrap.wrap(searchBar).bind('backspace', function(e) {
+    Mousetrap.wrap(searchBar).bind('backspace', () => {
       posi = -1;
       oldins=-1;
     });
 
     var timeout = null;
 
-    searchBar.oninput = function(e) {
+    searchBar.oninput = function() {
       clearTimeout(timeout);
-
-      timeout = setTimeout(function () {
-        lookAt();  
-      }, 150);
+      timeout = setTimeout(lookAt, 150);
       return true;
     }
-
   }
 
   function showLoadingIndicator()
@@ -982,6 +960,7 @@ var litnav = (function() {
 
     document.getElementById('litnav_loader').style.visibility = 'visible';
   }
+
   function hideLoadingIndicator()
   {
     let searchBar = document.getElementById("litnav_quickSearch");
@@ -1272,6 +1251,6 @@ var litnav = (function() {
     document.body.appendChild(div);
 
     hideLoadingIndicator();
-    initShortcuts();
+    setKeyboardBindings();
   }
 })();
