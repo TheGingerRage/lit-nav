@@ -3,22 +3,13 @@
 // @copyright 2018+ Bryan Mitchell / nCino
 // http://ncino.com
 
-chrome.runtime.sendMessage({ action: 'Loaded' });
+chrome.runtime.sendMessage({ action: 'Fetch Cookie' });
 
 var litnav = (function() {
   var cookie;
-
-  chrome.runtime.onMessage.addListener(
-    request => {
-      if(request.cookie) {
-        cookie = request.cookie;
-        init();
-      }
-    }
-  )
-
+  var serverInstance;
+  var clientId, omnomnom, hash;
   var outp;
-  var labelp;
   var tabHolder;
   var oldins;
   var posi = -1;
@@ -27,21 +18,60 @@ var litnav = (function() {
     "command+enter",
     "shift+enter"
   ]
-  var input;
-  var key;
   var metaData = {};
-  var serverInstance = getServerInstance();
   var cmds = {};
-  var isCtrl = false;
-  var clientId, omnomnom, hash;
-  var loaded=false;
   var shortcut;
   var sid;
   var sort;
   var SFAPI_VERSION = 'v33.0';
   var ftClient;
-  var labelData = [];
   var customObjects = {};
+
+  chrome.runtime.onMessage.addListener(
+    request => {
+      if(request.cookie) {
+        cookie = request.cookie;
+        omnomnom = cookie.value;
+        clientId = omnomnom.split('!')[0];
+        hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
+        serverInstance = `https://${cookie.domain}`;
+
+        init();
+
+        chrome.runtime.sendMessage({ action: 'Get Labels', key: hash, cookie }, response => {
+          if(chrome.runtime.lastError) {
+            //TODO: Convert to same pattern as commands; sendResponse if no labels and then
+            //send a new action to Refresh Labels. Checking lastError avoids a console error
+            //for now
+            console.log("Lighting Navigator > Fetching Labels");
+          }
+          
+          if(response && response.labels) {
+            renderLabels(response.labels);
+          }
+        });
+
+        chrome.runtime.sendMessage({ action: 'Get Commands', key: hash }, response => {
+          if(!response) {
+            //TODO: Set Loading... text + disable
+            chrome.runtime.sendMessage({ action: 'Refresh Metadata', key: hash, cookie });
+          } else {
+            cmds = response;
+          }
+        });
+      }
+
+      if(request.action === 'Render Labels') {
+        renderLabels(request.labels);
+      }
+
+      if(request.action === 'Refresh Metadata Success') {
+        cmds = request.commands;
+        hideLoadingIndicator();
+      }
+    }
+  )
+
   var META_DATATYPES = {
     "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
     "CHECKBOX": {name:"Checkbox",code:"cb", params:0},
@@ -144,12 +174,6 @@ var litnav = (function() {
       return true;
     }
 
-  function getSingleObjectMetadata()
-  {
-    var recordId = document.URL.split('/')[3];
-    var keyPrefix = recordId.substring(0,3);
-
-  }
   function addElements(ins)
   {
     if (ins.substring(0,9) == 'login as ')
@@ -304,16 +328,6 @@ var litnav = (function() {
     if (posi == -1 && firstEl != null) firstEl.className = "litnav_child litnav_selected"
   }
 
-  function httpGet(url, callback)
-  {
-    var req = new XMLHttpRequest();
-    req.open("GET", url, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      callback(response);
-    }
-    req.send();
-  }
   function getVisible() {
     return document.getElementById("litnav_shadow").style.visibility;
   }
@@ -498,10 +512,6 @@ var litnav = (function() {
 
     return words;
   }
-  function setColor (_posi, _color, _forg) {
-    outp.childNodes[_posi].style.background = _color;
-    outp.childNodes[_posi].style.color = _forg;
-  }
 
   function invokeCommand(cmd, newtab, event) {
     if (event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
@@ -519,54 +529,9 @@ var litnav = (function() {
       }
     if (cmd.toLowerCase() == 'refresh metadata')
       {
-        let searchBar = document.getElementById("litnav_quickSearch");
-        if (location.origin.indexOf("visual.force") !== -1) {
-          // document.getElementById('sfnav_quickSearch').value = 'Refresh does not work in VisualForce, run from Setup';
-          clearOutput();
-          setVisible("hidden");
-          chrome.runtime.sendMessage({action:'VisualForce Metadata', 'key': hash});
-
-          setTimeout(function() { 
-            chrome.runtime.sendMessage({
-              action:'Get Commands', 'key': hash},
-              function(response) {
-                cmds = response;
-              }
-            );
-            getCustomLabels();
-            searchBar.value = '';
-            setVisible("visible");
-            renderLabels();
-          }, 2000);
-          return;
-        }
-        if (location.origin.indexOf('lightning.force') !== -1) {
-          // document.getElementById('sfnav_quickSearch').value = 'Refresh does not work in Lightning, run in Classic Setup';
-          clearOutput();
-          setVisible("hidden");
-          chrome.runtime.sendMessage({action:'Lightning Metadata', 'key': hash});
-
-          setTimeout(function() { 
-            chrome.runtime.sendMessage({
-              action:'Get Commands', 'key': hash},
-              function(response) {
-                cmds = response;
-              }
-            );
-            getCustomLabels();
-            searchBar.value = '';
-            setVisible("visible");
-            renderLabels();
-          }, 4000);
-
-          return;
-        }
-
+        chrome.runtime.sendMessage({ action: 'Refresh Metadata', key: hash, cookie });
+        chrome.runtime.sendMessage({ action: 'Query Labels', key: hash, cookie });
         showLoadingIndicator();
-        getAllObjectMetadata();
-        setTimeout(function() {
-          hideLoadingIndicator();
-        }, 30000);
         return true;
       }
     if (cmd.toLowerCase() == 'clabels')
@@ -846,147 +811,14 @@ var litnav = (function() {
     setVisible("visible");
   }
 
-  function getMetadata(_data) {
-    if (_data.length == 0) return;
-    var metadata = JSON.parse(_data);
-
-    var mRecord = {};
-    var act = {};
-    metaData = {};
-    metadata.sobjects.map( obj => {
-
-      if (obj.keyPrefix != null) {
-        mRecord = {label, labelPlural, keyPrefix, urls} = obj;
-        metaData[obj.keyPrefix] = mRecord;
-
-        act = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix
-        }
-        if (mRecord.name.indexOf('__') != -1 && mRecord.name.indexOf('__') != mRecord.name.indexOf('__c')) {
-          cmds['List ' + mRecord.labelPlural + ' (' + mRecord.name.split('__')[0] + ')'] = act;
-          cmds['List ' + mRecord.labelPlural + ' (' + mRecord.name.split('__')[0] + ')']['synonyms'] = [obj.name];
-        } else {
-          cmds['List ' + mRecord.labelPlural] = act;
-          cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name];
-        }
-        act = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix + '/e',
-        }
-        cmds['New ' + mRecord.label] = act;
-        cmds['New ' + mRecord.label]['synonyms'] = [obj.name];
-
-      }
-    })
-
-    store('Store Commands', cmds);
-    // store('Store Metadata', metaData)
-  }
-
   function store(action, payload) {
+    const req = {
+      action,
+      payload,
+      key: hash
+    };
 
-    var req = {}
-    req.action = action;
-    req.key = hash;
-    req.payload = payload;
-
-    chrome.runtime.sendMessage(req, function(response) {
-
-    });
-
-    // var storagePayload = {};
-    // storagePayload[action] = payload;
-    // chrome.storage.local.set(storagePayload, function() {
-    //     console.log('stored');
-    // });
-  }
-
-  function getAllObjectMetadata() {
-    sid = "Bearer " + getCookie('sid');
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
-
-    cmds['Refresh Metadata'] = {};
-    cmds['Setup'] = {};
-    cmds['OrgLimits'] = {};
-    cmds['clabels'] = {};
-    var req = new XMLHttpRequest();
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      getMetadata(response.target.responseText);
-
-    }
-    req.send();
-
-    getSetupTree();
-    // getCustomObjects();
-    getCustomObjectsDef();
-    getApexClassesDef();
-    getTriggersDef();
-    getProfilesDef();
-    getPagesDef();
-    getUsersDef();
-    getComponentsDef();
-    getSysPropsNFORCEDef();
-    getSysPropsLLCBIDef();
-    getFlowsDef();
-    getCustomLabels();
-    renderLabels();
-  }
-
-  function parseSetupTree(html)
-  {
-    var textLeafSelector = '.setupLeaf > a[id*="_font"]';
-    var all = html.querySelectorAll(textLeafSelector);
-    var strName;
-    var as;
-    var strNameMain;
-    var strName;
-    [].map.call(all, function(item) {
-      var hasTopParent = false, hasParent = false;
-      var parent, topParent;
-      var parentEl, topParentEl;
-
-      if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
-          && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
-
-        hasParent = true;
-        parentEl = item.parentElement.parentElement.parentElement;
-        parent = parentEl.querySelector('.setupFolder').innerText;
-      }
-      if (hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
-         && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
-        hasTopParent = true;
-        topParentEl = parentEl.parentElement.parentElement;
-        topParent = topParentEl.querySelector('.setupFolder').innerText;
-      }
-
-      strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
-      strNameMain += (hasParent ? (parent + ' > ') : '');
-
-      strName = strNameMain + item.innerText;
-
-      if (cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
-
-    });
-    store('Store Commands', cmds);
-  }
-
-  function getSetupTree() {
-
-    var theurl = serverInstance + '/ui/setup/Setup'
-    var req = new XMLHttpRequest();
-    req.onload = function() {
-      parseSetupTree(this.response);
-      hideLoadingIndicator();
-    }
-    req.open("GET", theurl);
-    req.responseType = 'document';
-
-    req.send();
+    chrome.runtime.sendMessage(req);
   }
 
   function getCustomObjects()
@@ -1019,36 +851,10 @@ var litnav = (function() {
 
   function getServerInstance()
   {
-    var url = location.origin + "";
-    var urlParseArray = url.split(".");
-    var i;
-    var returnUrl;
-
-    if (url.indexOf("salesforce") != -1)
-      {
-        returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
-        return returnUrl;
-      }
-    if (url.indexOf("lightning.force") != -1)
-      {
-        returnUrl = url;
-        return returnUrl;
-      }
-    if (url.indexOf("cloudforce") != -1)
-      {
-        returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
-        return returnUrl;
-      }
-    if (url.indexOf("visual.force") != -1)
-      {
-        returnUrl = 'https://' + urlParseArray[1] + '';
-        return returnUrl;
-      }
-    return returnUrl;
+    return`https://${cookie.domain}`;
   }
 
   function initShortcuts() {
-
     chrome.runtime.sendMessage({'action':'Get Settings'},
       function(response) {
         if (response !== undefined) {
@@ -1057,18 +863,6 @@ var litnav = (function() {
         }
       }
     );
-
-    // chrome.storage.local.get('settings', function(results) {
-    //     if (typeof results.settings.shortcut === 'undefined')
-    //     {
-    //         shortcut = 'shift+space';
-    //         bindShortcut(shortcut);
-    //     }
-    //     else
-    //     {
-    //         bindShortcut(results.settings.shortcut);
-    //     }
-    // });
   }
 
   function kbdCommand(e, key) {
@@ -1182,315 +976,79 @@ var litnav = (function() {
 
   function showLoadingIndicator()
   {
+    let searchBar = document.getElementById("litnav_quickSearch");
+    searchBar.value = "Loading...";
+    searchBar.setAttribute("disabled","true");
+
     document.getElementById('litnav_loader').style.visibility = 'visible';
   }
   function hideLoadingIndicator()
   {
+    let searchBar = document.getElementById("litnav_quickSearch");
+    searchBar.value = "";
+    searchBar.removeAttribute("disabled");
+
     document.getElementById('litnav_loader').style.visibility = 'hidden';
-  }
-  function getCustomObjectsDef()
-  {
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+DeveloperName,+NamespacePrefix,+ManageableState+FROM+CustomObject';
-    var req = new XMLHttpRequest();
-    req.open("GET", toolingUrl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseObjectDefs(response.target.responseText);
+
+    if(searchBar.style.visibility !== 'hidden') {
+      searchBar.focus();
     }
-    req.send();
   }
-  function parseObjectDefs(_data) {
-      if (_data.length == 0) {
-        return;
-      }
-      var properties = JSON.parse(_data);
-      if (properties.nextRecordsUrl != undefined) {
-        var req = new XMLHttpRequest();
-        req.open("GET", properties.nextRecordsUrl, true);
-        req.setRequestHeader("Authorization", sid);
-        req.onload = function(response) {
-          parseObjectDefs(response.target.responseText);
-        }
-        req.send();
-      }
-      var action = {};
-      if (properties.records) {
-        properties.records.map( obj => {
-          if (obj.attributes != null) {
-            if (obj.ManageableState != 'unmanaged' || obj.NamespacePrefix == null) { 
-              propRecord = obj.DeveloperName, obj.NamespacePrefix, obj.Id;
+
+  function renderLabels(labels) {
+    var labelDiv = document.getElementById('litnav_labels');
+
+    if(labelDiv) {
+      document.body.removeChild(labelDiv);
+    }
     
-              action = {
-                key: obj.DeveloperName,
-                keyPrefix: obj.Id,
-                url: serverInstance + '/' + obj.Id
-              }
-              var apiName = (obj.NamespacePrefix == null ? '' : obj.NamespacePrefix + '__') + obj.DeveloperName + '__c';
-              cmds['Setup > Custom Object > ' + apiName] = action;
-            }
-          }
-        });
-        store('Store Commands', cmds);
-      }
-  }
+      if (labels.length > 0) {
+        var labelDiv = document.createElement('div');
+        labelDiv.setAttribute('id', 'litnav_labels');
+        labelDiv.innerHTML = `
+          <div class="litnav_labels_tab">
+            <div class="litnav_filter">
+              <input id="litnav_filter_input" class="litnav_filter_input" value="Filter">
+            </div>
+            <button id="all_button" class="tablinks">All Namespaces</button>
+          </div>
+          <div id="tabHolder">
+            <div id="All Namespaces" class="litnav_labels_tabcontent">
+              <table id="ltable-All Namespaces" border="0" cellpadding="0" cellspacing="0" class="sortable">
+                <col class="c1">
+                <col class="c2">
+                <col class="c3">
+                <col class="c4">
+                <col class="c5">
+                <thead class="sortableColumns">
+                  <tr id="header" class="litnav_row_header" style="background-color: rgb(255, 255, 255);">
+                    <th>Category</th>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Record</th>
+                    <th>Translation</th>
+                  </tr>
+                </thead>
+                <tbody id="lbody-All Namespaces">
+                </tbody>
+                <tfoot>
+                </tfoot>
+              </table>
+            </div>
+          </div>`;
+        document.body.appendChild(labelDiv);
+        var filterInput = document.getElementById('litnav_filter_input');
+        filterInput.onchange = function() {
+          filterLabels(filterInput.value);
+        }
+        var button = document.getElementById('all_button');
+        button.addEventListener('click', openTab);
+        button.tabName = 'All Namespaces';
 
-  function getApexClassesDef() {
-    ftClient.query('SELECT+Id,+Name,+NamespacePrefix+FROM+ApexClass',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].Name;
-          cmds['Setup > Apex Class > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying apex classes');
-      console.log('error =>> ', error);
-    });    
-  }
-  function getTriggersDef() {
-    ftClient.query('SELECT+Id,+Name+FROM+ApexTrigger',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = success.records[i].Name;
-          cmds['Setup > Apex Trigger > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying apex triggers');
-      console.log('error =>> ', error);
-    });
-  }
-  function getProfilesDef() {
-    ftClient.query('SELECT+Id,+Name+FROM+Profile',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = success.records[i].Name;
-          cmds['Setup > Profile > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying profiles');
-      console.log('error =>> ', error);
-    });   
-  }
-  function getPagesDef() {
-    ftClient.query('SELECT+Id,+Name+FROM+ApexPage',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = success.records[i].Name;
-          cmds['Setup > Visualforce page > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying visualforce pages');
-      console.log('error =>> ', error);
-    });
-  }
-  function getComponentsDef() {
-    ftClient.query('SELECT+Id,+Name+FROM+ApexComponent',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = success.records[i].Name;
-          cmds['Setup > Visualforce component > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying visualforce components');
-      console.log('error =>> ', error);
-    });
-  }
-  function getUsersDef() {
-    ftClient.query('SELECT+Id,+Name+FROM+User',
-    function(success)
-    {
-      for (var i=0;i<success.records.length;i++)
-        {
-          var apiName = success.records[i].Name;
-          cmds['Setup > User > ' + apiName] = {url: '/' + success.records[i].Id + '?noredirect=1', key: apiName};
-        }
-    },
-    function(error)
-    {
-      console.log('error while querying users');
-      console.log('error =>> ', error);
-    });
-  }
-  function getSysPropsNFORCEDef() {
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
-      + '/query?q=SELECT+Id,+Name,+nFORCE__Category_Name__c,+nFORCE__Key__c+FROM+nFORCE__System_Properties__c';
-    var req = new XMLHttpRequest();
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseSysPropsNFORCE(response.target.responseText);
-    }
-    req.send();
-  }
-  function parseSysPropsNFORCE(_data) {
-    if (_data.length == 0) {
-      return;
-    }
-    var properties = JSON.parse(_data);
-    if (properties.nextRecordsUrl != undefined) {
-      var req = new XMLHttpRequest();
-      req.open("GET", properties.nextRecordsUrl, true);
-      req.setRequestHeader("Authorization", sid);
-      req.onload = function(response) {
-        parseSysPropsNFORCE(response.target.responseText);
-      }
-      req.send();
-    }
-    var action = {};
-    if (properties.records) {
-      properties.records.map( obj => {
-        if (obj.attributes != null) {
-          propRecord = obj.nFORCE__Category_Name__c, obj.nFORCE__Key__c, obj.Name, obj.Id;
+        outp = document.getElementById("litnav_output");
+        labelp = document.getElementById("litnav_labels");
 
-          action = {
-            key: obj.name,
-            keyPrefix: obj.Id,
-            url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
-          }
-          cmds['Setup > System Property (nFORCE) > ' + obj.nFORCE__Category_Name__c + ' > ' + obj.nFORCE__Key__c] = action;
-        }
-      });
-      store('Store Commands', cmds);
-    }
-  }
-  function getSysPropsLLCBIDef() {
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION 
-      + '/query?q=SELECT+Id,+Name,+LLC_BI__Category_Name__c,+LLC_BI__Key__c+FROM+LLC_BI__System_Properties__c';
-    var req = new XMLHttpRequest();
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseSysPropsLLCBI(response.target.responseText);
-    }
-    req.send();
-  }
-  function parseSysPropsLLCBI(_data) {
-    if (_data.length == 0) {
-      return;
-    }
-    var properties = JSON.parse(_data);
-    if (properties.nextRecordsUrl != undefined) {
-      var req = new XMLHttpRequest();
-      req.open("GET", properties.nextRecordsUrl, true);
-      req.setRequestHeader("Authorization", sid);
-      req.onload = function(response) {
-        parseSysPropsLLCBI(response.target.responseText);
-      }
-      req.send();
-    }
-    var action = {};
-    if (properties.records) {
-      properties.records.map( obj => {
-        if (obj.attributes != null) {
-          propRecord = obj.LLC_BI__Category_Name__c, obj.LLC_BI__Key__c, obj.Name, obj.Id;
-
-          action = {
-            key: obj.Name,
-            keyPrefix: obj.Id,
-            url: serverInstance + '/' + obj.Id + '?setupid=CustomSettings&isdtp=p1'
-          }
-          cmds['Setup > System Property (LLC_BI) > ' + obj.LLC_BI__Category_Name__c + ' > ' + obj.LLC_BI__Key__c] = action;
-        }
-      });
-      store('Store Commands', cmds);
-    }
-  }
-  function getFlowsDef() {
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+DeveloperName+FROM+FlowDefinition';
-    var req = new XMLHttpRequest();
-    req.open("GET", toolingUrl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseFlows(response.target.responseText);
-    }
-    req.send();
-  }
-  function parseFlows(_data) {
-    if (_data.length == 0) {
-      return;
-    }
-    var properties = JSON.parse(_data);
-    var action = {};
-    if (properties.records) {
-      properties.records.map( obj => {
-        if (obj.attributes != null) {
-          propRecord = obj.DeveloperName, obj.Id;
-
-          action = {
-            key: obj.DeveloperName,
-            keyPrefix: obj.Id,
-            url: serverInstance + '/' + obj.Id
-          }
-          cmds['Setup > Flow > ' + obj.DeveloperName] = action;
-        }
-      });
-      store('Store Commands', cmds);
-    }
-  }
-  function getCustomLabels() {
-    if (sid == null) {
-      sid = "Bearer " + getCookie('sid');
-    }
-    var toolingUrl = getServerInstance() + '/services/data/v43.0/tooling/query/?q=SELECT+Id,+Name,+Category,+Value,+NamespacePrefix+FROM+ExternalString+ORDER+BY+NamespacePrefix,+Category';
-    var req = new XMLHttpRequest();
-    req.open("GET", toolingUrl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.onload = function(response) {
-      parseLabels(response.target.responseText);
-    }
-    req.send();
-  }
-
-  function parseLabels(_data) {
-    if (_data.length == 0) {
-      return;
-    }   
-    var properties = JSON.parse(_data);
-    labelData = labelData || [];
-    labelData.push(properties.records);
-    if (properties.nextRecordsUrl != undefined) {
-      var req = new XMLHttpRequest();
-      req.open("GET", properties.nextRecordsUrl, true);
-      req.setRequestHeader("Authorization", sid);
-      req.onload = function(response) {
-        parseLabels(response.target.responseText);
-      }
-      req.send();
-    }
-
-    store('Store Labels', labelData);
-  }
-
-  function renderLabels() {
-    chrome.runtime.sendMessage({
-      action:'Get Labels', 'key': hash},
-      function(response) {
-        labelData = response;
-        var properties = [];
-        for (var i = 0; i < labelData.length; i++) {
-          properties = properties.concat(labelData[i]);
-        }
-        if (properties) {
-        properties.map( obj => {
+        labels.forEach( obj => {
           if (obj.attributes != null) {
             propRecord = obj.DeveloperName, obj.Id;
             var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : 'Empty Namespace';
@@ -1608,7 +1166,6 @@ var litnav = (function() {
           tabClass[0].appendChild(button);
         }
       }
-    });
   }
 
   function openTab(evt) {
@@ -1714,81 +1271,7 @@ var litnav = (function() {
 
     document.body.appendChild(div);
 
-    var labelDiv = document.createElement('div');
-    labelDiv.setAttribute('id', 'litnav_labels');
-    labelDiv.innerHTML = `
-      <div class="litnav_labels_tab">
-        <div class="litnav_filter">
-          <input id="litnav_filter_input" class="litnav_filter_input" value="Filter">
-        </div>
-        <button id="all_button" class="tablinks">All Namespaces</button>
-      </div>
-      <div id="tabHolder">
-        <div id="All Namespaces" class="litnav_labels_tabcontent">
-          <table id="ltable-All Namespaces" border="0" cellpadding="0" cellspacing="0" class="sortable">
-            <col class="c1">
-            <col class="c2">
-            <col class="c3">
-            <col class="c4">
-            <col class="c5">
-            <thead class="sortableColumns">
-              <tr id="header" class="litnav_row_header" style="background-color: rgb(255, 255, 255);">
-                <th>Category</th>
-                <th>Name</th>
-                <th>Value</th>
-                <th>Record</th>
-                <th>Translation</th>
-              </tr>
-            </thead>
-            <tbody id="lbody-All Namespaces">
-            </tbody>
-            <tfoot>
-            </tfoot>
-          </table>
-        </div>
-      </div>`;
-    document.body.appendChild(labelDiv);
-    var filterInput = document.getElementById('litnav_filter_input');
-    filterInput.onchange = function() {
-      filterLabels(filterInput.value);
-    }
-    var button = document.getElementById('all_button');
-    button.addEventListener('click', openTab);
-    button.tabName = 'All Namespaces';
-
-    outp = document.getElementById("litnav_output");
-    labelp = document.getElementById("litnav_labels");
     hideLoadingIndicator();
     initShortcuts();
-
-    omnomnom = getCookie('sid');
-
-    clientId = omnomnom.split('!')[0];
-
-    hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
-    
-    // chrome.storage.local.get(['Commands','Metadata'], function(results) {
-    //     console.log(results);
-    // });
-
-    chrome.runtime.sendMessage({
-      action:'Get Commands', 'key': hash},
-      function(response) {
-        cmds = response;
-        if (cmds == null || cmds.length == 0) {
-          cmds = {};
-          metaData = {};
-          getAllObjectMetadata();
-        } else {
-          /// ???
-        }
-
-      });
-
-    // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},
-    //   function(response) {
-    //     metaData = response;
-    // });
-
   }
 })();
