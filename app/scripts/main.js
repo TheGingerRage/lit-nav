@@ -1054,6 +1054,12 @@ var litnav = (function() {
               var col5 = document.createElement('col');
               col5.setAttribute('class', 'c5');
               table.appendChild(col5);
+              var col6 = document.createElement('col');
+              col6.setAttribute('class', 'c6');
+              table.appendChild(col6);
+              var col7 = document.createElement('col');
+              col7.setAttribute('class', 'c7');
+              table.appendChild(col7);
               var thead = document.createElement('thead');
               thead.setAttribute('class', 'sortableColumns');
               var headerRow = document.createElement('tr');
@@ -1080,6 +1086,14 @@ var litnav = (function() {
               var headerTranslate = document.createElement('th');
               headerTranslate.innerHTML = ' ';
               headerRow.appendChild(headerTranslate);
+
+              var headerMasterLabel = document.createElement('th');
+              headerMasterLabel.innerHTML = '';
+              headerRow.appendChild(headerMasterLabel);
+
+              var headerNameSpace = document.createElement('th');
+              headerNameSpace.innerHTML = '';
+              headerRow.appendChild(headerNameSpace);
 
               thead.appendChild(headerRow);
               table.appendChild(thead);
@@ -1127,6 +1141,16 @@ var litnav = (function() {
             translateCell.innerHTML = '<a class="litnav_labels" href="' + serverInstance + '/01j/e?parentNmsp=' + nameSpace + '&retURL=%2F' + obj.Id + '&Parent=' + obj.Id + '">Translate</a>';
             row.appendChild(translateCell);
 
+            var masterLabelCell = document.createElement('td');
+            masterLabelCell.innerHTML = obj.MasterLabel;
+            masterLabelCell.setAttribute('hidden', 'true');
+            row.appendChild(masterLabelCell);
+
+            var namespaceCell = document.createElement('td');
+            namespaceCell.innerHTML = obj.NamespacePrefix;
+            namespaceCell.setAttribute('hidden', 'true');
+            row.appendChild(namespaceCell);
+
             var bodyString = 'lbody-' + nameSpace;
 
             var labelBody = document.getElementById(bodyString);
@@ -1141,6 +1165,14 @@ var litnav = (function() {
           button.setAttribute('class','litnav_export');
           button.addEventListener('click', downloadLabels);
           button.innerHTML = 'Export To CSV';
+          var tabClass = document.getElementsByClassName('litnav_labels_tab');
+          tabClass[0].appendChild(button);
+        }
+        if (document.getElementsByClassName('litnav_exportxliff').length == 0 ) {
+          var button = document.createElement('button');
+          button.setAttribute('class','litnav_exportxliff');
+          button.addEventListener('click', downloadLabelsXliff);
+          button.innerHTML = 'Export To XLIFF';
           var tabClass = document.getElementsByClassName('litnav_labels_tab');
           tabClass[0].appendChild(button);
         }
@@ -1229,6 +1261,62 @@ var litnav = (function() {
     link.click();
     document.body.removeChild(link);
   }
+
+  function downloadLabelsXliff() {
+    var namespace = document.getElementsByClassName('tablinks active')[0].innerHTML;
+    var tablinks = document.getElementsByClassName('litnav_labels_tabcontent');
+    var table_id;
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].style.display == 'block') {
+        table_id = tablinks[i].id;
+      }
+    }
+
+    var rows = document.getElementById('ltable-' + table_id).querySelectorAll('tr');
+    var xliff = [];
+    xliff.push('<?xml version="1.0" encoding="UTF-8"?>');
+    xliff.push('<xliff version="1.2">');
+    xliff.push('    <file original="Salesforce" source-language="en_US" target-language="en_US" datatype="xml">');
+    xliff.push('        <body>');
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i].style.display != 'none') {  
+        var row = [], cols = rows[i].querySelectorAll('td, th');
+        // Skip Category, init to 1
+        xliff.push('            <trans-unit id="CustomLabel.' + cols[6].innerText + '__' + cols[1].innerText.replace(/"/g, '""') + '" maxwidth="1000" size-unit="char">');
+        xliff.push('                <source>' + escapeHtml(cols[2].innerText) + '</source>');
+        xliff.push('                <note>' + escapeHtml(cols[5].innerText) + '</note>');
+        xliff.push('            </trans-unit>');
+      }
+    }
+
+    // Wrap up the tail of the file.
+    xliff.push('        </body>');
+    xliff.push('    </file>');
+    xliff.push('</xliff>');
+    // Have to blob it, else large files won't DL properly
+    var xliff_string = xliff.join('\n');
+    var xliffData = new Blob([xliff_string], { type: 'text/xliff' });
+    var xliffURL = URL.createObjectURL(xliffData);
+
+    var filename = 'export_' + table_id.replace(' ', '_') + '_' + new Date().toLocaleDateString() + '.xlf';
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    link.setAttribute('target', '_blank');
+    link.setAttribute('href', xliffURL);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&apos;");
+ }
 
   function init()
   {

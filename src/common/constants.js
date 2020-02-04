@@ -22,7 +22,8 @@ export const query = {
       Name,
       Category,
       Value,
-      NamespacePrefix
+      NamespacePrefix,
+      MasterLabel
     FROM
       ExternalString
     ORDER BY NamespacePrefix,Category`,

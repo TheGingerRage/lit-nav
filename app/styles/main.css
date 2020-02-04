@@ -138,6 +138,21 @@
   outline:0 !important;
 }
 
+.litnav_labels_tab button.litnav_exportxliff {
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: .75rem;
+  background: none;
+  padding: .4em .6em;
+  color: #45d;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  border-radius: 0;
+  cursor: pointer;
+  outline:0 !important;
+}
+
 .litnav_labels_tab button.active {
   background: #cccccc;
   color: #000000;
@@ -190,6 +205,12 @@ tr.litnav_row {
 }
 .c5 {
   width: 8%;
+}
+.c6 { 
+  display: none;
+}
+.c7 { 
+  display: none;
 }
 a.litnav_labels {
   color: #000;
