@@ -1,6 +1,6 @@
 {
   "name": "Lightning Navigator",
-  "version": "0.3.2",
+  "version": "0.3.4",
   "manifest_version": 2,
   "default_locale": "en",
   "commands": {
@@ -50,7 +50,7 @@
     "https://*.salesforce.com/*",
     "https://*.my-salesforce.com/*",
     "https://*.cloudforce.com/*",
-    "https://*.visualforce.com/*"
+    "https://*.visualforce.com/*",
     "storage",
     "tabs",
     "cookies"
