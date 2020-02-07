@@ -31,6 +31,7 @@
       "matches": [
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
+        "https://*.my-salesforce.com/*",
         "https://*.cloudforce.com/*",
         "https://*.visualforce.com/*"
       ],
@@ -47,7 +48,9 @@
   "permissions": [
     "https://*.force.com/*",
     "https://*.salesforce.com/*",
+    "https://*.my-salesforce.com/*",
     "https://*.cloudforce.com/*",
+    "https://*.visualforce.com/*"
     "storage",
     "tabs",
     "cookies"
