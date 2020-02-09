@@ -1,6 +1,6 @@
 {
   "name": "Lightning Navigator",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "manifest_version": 2,
   "default_locale": "en",
   "commands": {
