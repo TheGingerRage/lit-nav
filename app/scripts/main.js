@@ -1084,183 +1084,183 @@ var litnav = (function() {
     if(labelDiv) {
       document.body.removeChild(labelDiv);
     }
-      if (labels.length > 0) {
-        document.body.appendChild(createLabelDiv());
-        var filterInput = document.getElementById('litnav_filter_input');
-        filterInput.onchange = function() {
-          filterLabels(filterInput.value);
-        }
-        var button = document.getElementById('all_button');
-        button.addEventListener('click', openTab);
-        button.tabName = 'All Namespaces';
-
-        outp = document.getElementById("litnav_output");
-        labelp = document.getElementById("litnav_labels");
-
-        labels.forEach( obj => {
-          if (obj.attributes != null) {
-            propRecord = obj.DeveloperName, obj.Id;
-            var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : 'Empty Namespace';
-            var namespaceNode = document.getElementById('ltable-'+nameSpace);
-            if (namespaceNode == null) {
-              var node = document.createElement('div');
-              node.setAttribute('id', nameSpace);
-              node.setAttribute('class', 'litnav_labels_tabcontent');
-              var table = document.createElement('table');
-              table.setAttribute('id', 'ltable-' + nameSpace);
-              table.setAttribute('class', 'sortable');
-              var tableFrag = document.createDocumentFragment();
-              var col1 = document.createElement('col');
-              col1.setAttribute('class', 'c1');
-              tableFrag.appendChild(col1);
-              var col2 = document.createElement('col');
-              col2.setAttribute('class', 'c2');
-              tableFrag.appendChild(col2);
-              var col3 = document.createElement('col');
-              col3.setAttribute('class', 'c3');
-              tableFrag.appendChild(col3);
-              var col4 = document.createElement('col');
-              col4.setAttribute('class', 'c4');
-              tableFrag.appendChild(col4);
-              var col5 = document.createElement('col');
-              col5.setAttribute('class', 'c5');
-              tableFrag.appendChild(col5);
-              var col6 = document.createElement('col');
-              col6.setAttribute('class', 'c6');
-              tableFrag.appendChild(col6);
-              var col7 = document.createElement('col');
-              col7.setAttribute('class', 'c7');
-              tableFrag.appendChild(col7);
-
-              table.appendChild(tableFrag);
-
-              var thead = document.createElement('thead');
-              thead.setAttribute('class', 'sortableColumns');
-              var headerRow = document.createElement('tr');
-              headerRow.setAttribute('id', 'header');
-              headerRow.setAttribute('class', 'litnav_row_header');
-              headerRow.style.backgroundColor = '#ffffff';
-              var headerFrag = document.createDocumentFragment();
-
-              var headerCat = document.createElement('th');
-              headerCat.appendChild(document.createTextNode('Category'));
-              headerFrag.appendChild(headerCat);
-              
-              var headerName = document.createElement('th');
-              headerName.appendChild(document.createTextNode('Name'));
-              headerFrag.appendChild(headerName);
-              
-              var headerValue = document.createElement('th');
-              headerValue.appendChild(document.createTextNode('Value'));
-              headerFrag.appendChild(headerValue);
-
-              var headerRecord = document.createElement('th');
-              headerRecord.appendChild(document.createTextNode(' '));
-              headerFrag.appendChild(headerRecord);
-
-              var headerTranslate = document.createElement('th');
-              headerTranslate.appendChild(document.createTextNode(' '));
-              headerFrag.appendChild(headerTranslate);
-              headerRow.appendChild(headerFrag);
-
-              var headerMasterLabel = document.createElement('th');
-              headerMasterLabel.innerHTML = '';
-              headerRow.appendChild(headerMasterLabel);
-
-              var headerNameSpace = document.createElement('th');
-              headerNameSpace.innerHTML = '';
-              headerRow.appendChild(headerNameSpace);
-
-              thead.appendChild(headerRow);
-              table.appendChild(thead);
-              var tbody = document.createElement('tbody');
-              tbody.setAttribute('id', 'lbody-' + nameSpace);
-              table.appendChild(tbody);
-              node.appendChild(table);
-
-              tabHolder = document.getElementById('tabHolder');
-              tabHolder.appendChild(node);
-
-              var button = document.createElement('button');
-              button.setAttribute('class','tablinks');
-              button.addEventListener('click', openTab);
-              button.tabName = nameSpace;
-              button.appendChild(document.createTextNode(nameSpace));
-
-              var tabClass = document.getElementsByClassName('litnav_labels_tab');
-              tabClass[0].appendChild(button);
-            }
-
-            var row = document.createElement('tr');
-            row.setAttribute('class', 'litnav_row');
-
-            var catCell = document.createElement('td');
-            catCell.appendChild(document.createTextNode((obj.Category != null) ? obj.Category : '(null)'));
-            catCell.setAttribute('class', 'data');
-            row.appendChild(catCell);
-            
-            var nameCell = document.createElement('td');
-            nameCell.appendChild(document.createTextNode(obj.Name));
-            nameCell.setAttribute('class', 'data');
-            row.appendChild(nameCell);
-            
-            var valueCell = document.createElement('td');
-            valueCell.appendChild(document.createTextNode(obj.Value));
-            valueCell.setAttribute('class', 'data');
-            row.appendChild(valueCell);
-
-            var idCell = document.createElement('td');
-            var recordAElement = document.createElement('a');
-            recordAElement.setAttribute('class', 'litnav_labels');
-            recordAElement.setAttribute('href', serverInstance + '/' + obj.Id);
-            recordAElement.appendChild(document.createTextNode('Record'));
-            idCell.appendChild(recordAElement);
-            row.appendChild(idCell);
-
-            var translateCell = document.createElement('td');
-            var translateAElement = document.createElement('a');
-            translateAElement.setAttribute('class', 'litnav_labels');
-            translateAElement.setAttribute('href', serverInstance + '/01j/e?parentNmsp=' + nameSpace + '&retURL=%2F' + obj.Id + '&Parent=' + obj.Id);
-            translateAElement.appendChild(document.createTextNode('Translate'));
-            translateCell.appendChild(translateAElement);
-            row.appendChild(translateCell);
-
-            var masterLabelCell = document.createElement('td');
-            masterLabelCell.innerHTML = obj.MasterLabel;
-            masterLabelCell.setAttribute('hidden', 'true');
-            row.appendChild(masterLabelCell);
-
-            var namespaceCell = document.createElement('td');
-            namespaceCell.innerHTML = obj.NamespacePrefix;
-            namespaceCell.setAttribute('hidden', 'true');
-            row.appendChild(namespaceCell);
-
-            var bodyString = 'lbody-' + nameSpace;
-
-            var labelBody = document.getElementById(bodyString);
-            var allTable = document.getElementById('lbody-All Namespaces')
-            labelBody.appendChild(row);
-            allTable.appendChild(row.cloneNode(true));
-          }
-        });
-        // Add button for Export at the end of the process
-        if (document.getElementsByClassName('litnav_export').length == 0 ) {
-          var button = document.createElement('button');
-          button.setAttribute('class','litnav_export');
-          button.addEventListener('click', downloadLabels);
-          button.appendChild(document.createTextNode('Export To CSV'));
-          var tabClass = document.getElementsByClassName('litnav_labels_tab');
-          tabClass[0].appendChild(button);
-        }
-        if (document.getElementsByClassName('litnav_exportxliff').length == 0 ) {
-          var button = document.createElement('button');
-          button.setAttribute('class','litnav_exportxliff');
-          button.addEventListener('click', downloadLabelsXliff);
-          button.innerHTML = 'Export To XLIFF';
-          var tabClass = document.getElementsByClassName('litnav_labels_tab');
-          tabClass[0].appendChild(button);
-        }
+    if (labels.length > 0) {
+      document.body.appendChild(createLabelDiv());
+      var filterInput = document.getElementById('litnav_filter_input');
+      filterInput.onchange = function() {
+        filterLabels(filterInput.value);
       }
+      var button = document.getElementById('all_button');
+      button.addEventListener('click', openTab);
+      button.tabName = 'All Namespaces';
+
+      outp = document.getElementById("litnav_output");
+      labelp = document.getElementById("litnav_labels");
+
+      labels.forEach( obj => {
+        if (obj.attributes != null) {
+          propRecord = obj.DeveloperName, obj.Id;
+          var nameSpace = (obj.NamespacePrefix != null) ? obj.NamespacePrefix : 'Empty Namespace';
+          var namespaceNode = document.getElementById('ltable-'+nameSpace);
+          if (namespaceNode == null) {
+            var node = document.createElement('div');
+            node.setAttribute('id', nameSpace);
+            node.setAttribute('class', 'litnav_labels_tabcontent');
+            var table = document.createElement('table');
+            table.setAttribute('id', 'ltable-' + nameSpace);
+            table.setAttribute('class', 'sortable');
+            var tableFrag = document.createDocumentFragment();
+            var col1 = document.createElement('col');
+            col1.setAttribute('class', 'c1');
+            tableFrag.appendChild(col1);
+            var col2 = document.createElement('col');
+            col2.setAttribute('class', 'c2');
+            tableFrag.appendChild(col2);
+            var col3 = document.createElement('col');
+            col3.setAttribute('class', 'c3');
+            tableFrag.appendChild(col3);
+            var col4 = document.createElement('col');
+            col4.setAttribute('class', 'c4');
+            tableFrag.appendChild(col4);
+            var col5 = document.createElement('col');
+            col5.setAttribute('class', 'c5');
+            tableFrag.appendChild(col5);
+            var col6 = document.createElement('col');
+            col6.setAttribute('class', 'c6');
+            tableFrag.appendChild(col6);
+            var col7 = document.createElement('col');
+            col7.setAttribute('class', 'c7');
+            tableFrag.appendChild(col7);
+
+            table.appendChild(tableFrag);
+
+            var thead = document.createElement('thead');
+            thead.setAttribute('class', 'sortableColumns');
+            var headerRow = document.createElement('tr');
+            headerRow.setAttribute('id', 'header');
+            headerRow.setAttribute('class', 'litnav_row_header');
+            headerRow.style.backgroundColor = '#ffffff';
+            var headerFrag = document.createDocumentFragment();
+
+            var headerCat = document.createElement('th');
+            headerCat.appendChild(document.createTextNode('Category'));
+            headerFrag.appendChild(headerCat);
+            
+            var headerName = document.createElement('th');
+            headerName.appendChild(document.createTextNode('Name'));
+            headerFrag.appendChild(headerName);
+            
+            var headerValue = document.createElement('th');
+            headerValue.appendChild(document.createTextNode('Value'));
+            headerFrag.appendChild(headerValue);
+
+            var headerRecord = document.createElement('th');
+            headerRecord.appendChild(document.createTextNode(' '));
+            headerFrag.appendChild(headerRecord);
+
+            var headerTranslate = document.createElement('th');
+            headerTranslate.appendChild(document.createTextNode(' '));
+            headerFrag.appendChild(headerTranslate);
+            headerRow.appendChild(headerFrag);
+
+            var headerMasterLabel = document.createElement('th');
+            headerMasterLabel.innerHTML = '';
+            headerRow.appendChild(headerMasterLabel);
+
+            var headerNameSpace = document.createElement('th');
+            headerNameSpace.innerHTML = '';
+            headerRow.appendChild(headerNameSpace);
+
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            var tbody = document.createElement('tbody');
+            tbody.setAttribute('id', 'lbody-' + nameSpace);
+            table.appendChild(tbody);
+            node.appendChild(table);
+
+            tabHolder = document.getElementById('tabHolder');
+            tabHolder.appendChild(node);
+
+            var button = document.createElement('button');
+            button.setAttribute('class','tablinks');
+            button.addEventListener('click', openTab);
+            button.tabName = nameSpace;
+            button.appendChild(document.createTextNode(nameSpace));
+
+            var tabClass = document.getElementsByClassName('litnav_labels_tab');
+            tabClass[0].appendChild(button);
+          }
+
+          var row = document.createElement('tr');
+          row.setAttribute('class', 'litnav_row');
+
+          var catCell = document.createElement('td');
+          catCell.appendChild(document.createTextNode((obj.Category != null) ? obj.Category : '(null)'));
+          catCell.setAttribute('class', 'data');
+          row.appendChild(catCell);
+          
+          var nameCell = document.createElement('td');
+          nameCell.appendChild(document.createTextNode(obj.Name));
+          nameCell.setAttribute('class', 'data');
+          row.appendChild(nameCell);
+          
+          var valueCell = document.createElement('td');
+          valueCell.appendChild(document.createTextNode(obj.Value));
+          valueCell.setAttribute('class', 'data');
+          row.appendChild(valueCell);
+
+          var idCell = document.createElement('td');
+          var recordAElement = document.createElement('a');
+          recordAElement.setAttribute('class', 'litnav_labels');
+          recordAElement.setAttribute('href', serverInstance + '/' + obj.Id);
+          recordAElement.appendChild(document.createTextNode('Record'));
+          idCell.appendChild(recordAElement);
+          row.appendChild(idCell);
+
+          var translateCell = document.createElement('td');
+          var translateAElement = document.createElement('a');
+          translateAElement.setAttribute('class', 'litnav_labels');
+          translateAElement.setAttribute('href', serverInstance + '/01j/e?parentNmsp=' + nameSpace + '&retURL=%2F' + obj.Id + '&Parent=' + obj.Id);
+          translateAElement.appendChild(document.createTextNode('Translate'));
+          translateCell.appendChild(translateAElement);
+          row.appendChild(translateCell);
+
+          var masterLabelCell = document.createElement('td');
+          masterLabelCell.innerHTML = obj.MasterLabel;
+          masterLabelCell.setAttribute('hidden', 'true');
+          row.appendChild(masterLabelCell);
+
+          var namespaceCell = document.createElement('td');
+          namespaceCell.innerHTML = obj.NamespacePrefix;
+          namespaceCell.setAttribute('hidden', 'true');
+          row.appendChild(namespaceCell);
+
+          var bodyString = 'lbody-' + nameSpace;
+
+          var labelBody = document.getElementById(bodyString);
+          var allTable = document.getElementById('lbody-All Namespaces')
+          labelBody.appendChild(row);
+          allTable.appendChild(row.cloneNode(true));
+        }
+      });
+      // Add button for Export at the end of the process
+      if (document.getElementsByClassName('litnav_export').length == 0 ) {
+        var button = document.createElement('button');
+        button.setAttribute('class','litnav_export');
+        button.addEventListener('click', downloadLabels);
+        button.appendChild(document.createTextNode('Export To CSV'));
+        var tabClass = document.getElementsByClassName('litnav_labels_tab');
+        tabClass[0].appendChild(button);
+      }
+      if (document.getElementsByClassName('litnav_exportxliff').length == 0 ) {
+        var button = document.createElement('button');
+        button.setAttribute('class','litnav_exportxliff');
+        button.addEventListener('click', downloadLabelsXliff);
+        button.innerHTML = 'Export To XLIFF';
+        var tabClass = document.getElementsByClassName('litnav_labels_tab');
+        tabClass[0].appendChild(button);
+      }
+    }
   }
 
   function openTab(evt) {
